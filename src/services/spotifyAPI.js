@@ -1,12 +1,14 @@
 import axios from 'axios';
+import { Buffer } from 'buffer'; // Para manejar codificación Base64 en React Native
 
+// Obtener token de acceso de Spotify
 export const getSpotifyToken = async () => {
-  const clientId = 'YOUR_CLIENT_ID';
-  const clientSecret = 'YOUR_CLIENT_SECRET';
-  const credentials = btoa(`${clientId}:${clientSecret}`);
-  
+  const clientId = 'df53639f2dd245f4a1c3b4c3e0b8dfda';
+  const clientSecret = '08638641c5894cee803b102e5a35c657';
+  const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64'); // Codificar en Base64
+
   try {
-    const response = await axios.post('https://accounts.spotify.com/api/token', 
+    const response = await axios.post('https://accounts.spotify.com/api/token',
       'grant_type=client_credentials', {
       headers: {
         'Authorization': `Basic ${credentials}`,
@@ -16,23 +18,47 @@ export const getSpotifyToken = async () => {
 
     return response.data.access_token;
   } catch (error) {
-    console.error('Error al obtener el token de acceso:', error);
+    console.error('Error obtaining access token:', error);
+    throw error;
   }
 };
 
-
-export  const getArtistInfo = async (artistId) => {
+// Obtener información de un artista
+export const getArtistInfo = async (artistId) => {
+  try {
     const token = await getSpotifyToken();
-  
-    try {
-      const response = await axios.get(`https://api.spotify.com/v1/artists/${artistId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-  
-      return response.data;
-    } catch (error) {
-      console.error('Error al obtener la información del artista:', error);
-    }
-  };
+    const response = await axios.get(`https://api.spotify.com/v1/artists/${artistId}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error('Error getting artist info:', error);
+    throw error;
+  }
+};
+
+// Buscar artistas
+export const searchArtists = async (query) => {
+  if (!query) return [];
+
+  try {
+    const token = await getSpotifyToken();
+    const response = await axios.get('https://api.spotify.com/v1/search', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      params: {
+        q: query,
+        type: 'artist',
+        limit: 10,
+      },
+    });
+    return response.data.artists.items;
+  } catch (error) {
+    console.error('Error searching for artists:', error);
+    return [];
+  }
+};

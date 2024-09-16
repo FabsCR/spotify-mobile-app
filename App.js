@@ -2,19 +2,12 @@ import React from 'react';
 import { StyleSheet, Text, View, ScrollView } from 'react-native';
 import { Button } from 'react-native-web';
 import ArtistInfo from './src/components/ArtistInfo';
+import SearchArtists from './src/components/SearchArtists';
 
 export default function App() {
   return (
     <>
-    <Text style={styles.titleInformation}>Información de artistas</Text>
-    <ScrollView>
-
-    <View>
-    <ArtistInfo artistId="0OdUWJ0sBjDrqHygGUXeCF" />
-    <ArtistInfo artistId="6qqNVTkY8uBg9cP3Jd7DAH" />
-    <ArtistInfo artistId="3TVXtAsR1Inumwj472S9r4" />
-    </View>
-    </ScrollView>
+    <SearchArtists />
     </>
   );
 }
