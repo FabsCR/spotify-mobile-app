@@ -1,20 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
-import { getArtistInfo } from '../services/spotifyAPI.js';
+import { getAlbumInfo } from '../services/spotifyAPI.js';
 
-const ArtistInfo = ({ artistId }) => {
-  const [artist, setArtist] = useState(null);
+const AlbumInfo = ({ albumId }) => {
+  const [album, setArtist] = useState(null);
 
   useEffect(() => {
     const fetchArtist = async () => {
-      const artistData = await getArtistInfo(artistId);
-      setArtist(artistData);
+      const albumData = await getAlbumInfo(albumId);
+      setArtist(albumData);
     };
 
     fetchArtist();
-  }, [artistId]);
+  }, [albumId]);
 
-  if (!artist) return <Text>Cargando...</Text>;
+  if (!album) return <Text>Cargando...</Text>;
 
   return (
     <View style={styles.container}>
@@ -116,5 +116,5 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ArtistInfo;
+export default AlbumInfo;
 

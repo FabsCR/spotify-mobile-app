@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Text, View, TextInput, Button, Image, FlatList, StyleSheet } from 'react-native';
+import { Button, FlatList, Image, StyleSheet, Text, TextInput, View } from 'react-native';
 import { searchArtists } from '../services/spotifyAPI.js'; // Asegúrate de que la ruta sea correcta
 
 const SearchArtists = () => {
@@ -9,7 +9,6 @@ const SearchArtists = () => {
 
   const handleSearch = async () => {
     if (!query) return;
-
     setLoading(true);
     const results = await searchArtists(query);
     setArtists(results);
@@ -35,6 +34,7 @@ const SearchArtists = () => {
         data={artists}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
+          console.log('ID del artista:', item.id),
           <View style={styles.artistContainer}>
             {/* Nombre del artista */}
             <Text style={styles.artistName}>{item.name}</Text>

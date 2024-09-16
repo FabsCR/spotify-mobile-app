@@ -1,13 +1,16 @@
 import React from 'react';
-import { StyleSheet, Text, View, ScrollView } from 'react-native';
-import { Button } from 'react-native-web';
-import ArtistInfo from './src/components/ArtistInfo';
+import { StyleSheet } from 'react-native';
+import SearchAlbum from './src/components/SearchAlbum';
 import SearchArtists from './src/components/SearchArtists';
+import SearchPodcast from './src/components/SearchPodcast';
+
 
 export default function App() {
   return (
     <>
     <SearchArtists />
+    <SearchAlbum />
+    <SearchPodcast />
     </>
   );
 }
