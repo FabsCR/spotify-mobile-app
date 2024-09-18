@@ -3,8 +3,8 @@ import { Buffer } from 'buffer'; // Para manejar codificación Base64 en React N
 
 // Obtener token de acceso de Spotify
 export const getSpotifyToken = async () => {
-  const clientId = 'df53639f2dd245f4a1c3b4c3e0b8dfda';
-  const clientSecret = '08638641c5894cee803b102e5a35c657';
+  const clientId = 'API KEY';
+  const clientSecret = 'API SECRET';
   const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64'); // Codificar en Base64
 
   try {
