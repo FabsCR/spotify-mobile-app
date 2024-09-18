@@ -3,8 +3,8 @@ import { Buffer } from 'buffer'; // Para manejar codificación Base64 en React N
 
 // Obtener token de acceso de Spotify
 export const getSpotifyToken = async () => {
-  const clientId = 'API KEY';
-  const clientSecret = 'API SECRET';
+  const clientId = 'df53639f2dd245f4a1c3b4c3e0b8dfda';
+  const clientSecret = '08638641c5894cee803b102e5a35c657';
   const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64'); // Codificar en Base64
 
   try {
@@ -167,3 +167,30 @@ export const searchPodcasts = async (query) => {
     throw error;
   }
 };
+
+
+export const searchSongs = async (query) => {
+  try {
+    // Obtener el token de acceso
+    const accessToken = await getSpotifyToken();
+
+    // Realizar la solicitud a la API de Spotify para buscar canciones
+    const response = await axios.get('https://api.spotify.com/v1/search', {
+      params: {
+        q: query,
+        type: 'track', // 'track' se usa para buscar canciones
+        limit: 10, // Puedes ajustar el límite según tus necesidades
+        market: 'US', // Puedes ajustar el mercado según tus necesidades
+      },
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+      },
+    });
+
+    // Devolver los resultados de la búsqueda
+    return response.data.tracks.items;
+  } catch (error) {
+    console.error('Error searching for songs:', error);
+    throw error;
+  }
+}

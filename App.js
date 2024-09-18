@@ -3,6 +3,7 @@ import { StyleSheet } from 'react-native';
 import SearchAlbum from './src/components/SearchAlbum';
 import SearchArtists from './src/components/SearchArtists';
 import SearchPodcast from './src/components/SearchPodcast';
+import SearchSong from './src/components/SearchSong';
 
 
 export default function App() {
@@ -11,6 +12,7 @@ export default function App() {
     <SearchArtists />
     <SearchAlbum />
     <SearchPodcast />
+    <SearchSong />
     </>
   );
 }
