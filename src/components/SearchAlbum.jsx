@@ -9,7 +9,7 @@ const SearchAlbum = () => {
 
   const handleSearch = async () => {
     if (!query) return;
-
+    console.log("Hola mundo")
     setLoading(true);
     try {
       const results = await searchAlbums(query);
