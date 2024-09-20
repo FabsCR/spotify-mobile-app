@@ -3,8 +3,8 @@ import { Buffer } from 'buffer';
 
 // Client Credentials para obtener token de acceso
 export const getClientCredentialsToken = async () => {
-  const clientId = 'CLIENT ID';
-  const clientSecret = 'CLIENT SECRET';
+  const clientId = 'CLIENT_ID';
+  const clientSecret = 'CLIENT_SECRET';
   const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
 
   try {
