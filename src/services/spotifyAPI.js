@@ -1,11 +1,11 @@
 import axios from 'axios';
-import { Buffer } from 'buffer'; // Para manejar codificación Base64 en React Native
+import { Buffer } from 'buffer';
 
-// Obtener token de acceso de Spotify
-export const getSpotifyToken = async () => {
-  const clientId = 'YOUR_API_KEY';
-  const clientSecret = 'YOUR_API_SECRET';
-  const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64'); // Codificar en Base64
+// Client Credentials para obtener token de acceso
+export const getClientCredentialsToken = async () => {
+  const clientId = 'CLIENT ID';
+  const clientSecret = 'CLIENT SECRET';
+  const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
 
   try {
     const response = await axios.post('https://accounts.spotify.com/api/token',
@@ -23,64 +23,12 @@ export const getSpotifyToken = async () => {
   }
 };
 
-// Obtener información de un artista
-export const getArtistInfo = async (artistId) => {
-  try {
-    const token = await getSpotifyToken();
-    const response = await axios.get(`https://api.spotify.com/v1/artists/${artistId}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
-
-    return response.data;
-  } catch (error) {
-    console.error('Error getting artist info:', error);
-    throw error;
-  }
-};
-
-// Obtener información de un artista
-export const getAlbumInfo = async (albumId) => {
-  try {
-    const token = await getSpotifyToken();
-    const response = await axios.get(`https://api.spotify.com/v1/albums/${albumId}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
-
-    return response.data;
-  } catch (error) {
-    console.error('Error getting artist info:', error);
-    throw error;
-  }
-};
-
-// Obtener información de un artista
-// Función para obtener la información de un podcast
-export const getPodcastInfo = async (podcastId) => {
-  try {
-    const token = await getSpotifyToken();
-    const response = await axios.get(`https://api.spotify.com/v1/shows/${podcastId}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
-
-    return response.data;
-  } catch (error) {
-    console.error('Error getting podcast info:', error);
-    throw error;
-  }
-};
-
-// Buscar artistas
+// Función de búsqueda general reutilizando el token de Client Credentials
 export const searchArtists = async (query) => {
   if (!query) return [];
-
+  
   try {
-    const token = await getSpotifyToken();
+    const token = await getClientCredentialsToken();
     const response = await axios.get('https://api.spotify.com/v1/search', {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -91,9 +39,6 @@ export const searchArtists = async (query) => {
         limit: 10,
       },
     });
-    console.log(response.data);
-    console.log(response.data.artists.items);
-    console.log(query);
     return response.data.artists.items;
   } catch (error) {
     console.error('Error searching for artists:', error);
@@ -103,23 +48,17 @@ export const searchArtists = async (query) => {
 
 export const searchAlbums = async (query) => {
   try {
-    // Obtener el token de acceso
-    const token = await getSpotifyToken();
-    
-    // Realizar la solicitud de búsqueda de álbumes
+    const token = await getClientCredentialsToken();
     const response = await axios.get('https://api.spotify.com/v1/search', {
       params: {
         q: query,
         type: 'album',
-        limit: 10 // Puedes ajustar el límite según tus necesidades
+        limit: 10,
       },
       headers: {
-        'Authorization': `Bearer ${token}`
-      }
+        'Authorization': `Bearer ${token}`,
+      },
     });
-
-    // Retornar los resultados
-    console.log(response.data.albums.items)
     return response.data.albums.items;
   } catch (error) {
     console.error('Error searching for albums:', error);
@@ -127,70 +66,54 @@ export const searchAlbums = async (query) => {
   }
 };
 
-
 export const searchPodcasts = async (query) => {
   try {
-    // Obtener el token de acceso
-    const accessToken = await getSpotifyToken();
-
-    console.log('Access Token:', accessToken); // Asegúrate de que el token esté presente
-
-    // Realizar la solicitud a la API de Spotify para buscar podcasts
+    const token = await getClientCredentialsToken();
     const response = await axios.get('https://api.spotify.com/v1/search', {
       params: {
         q: query,
-        type: 'show', // 'show' se usa para buscar podcasts
-        limit: 10, // Puedes ajustar el límite según tus necesidades
-        market: 'US', // Puedes ajustar el mercado según tus necesidades
+        type: 'show',
+        limit: 10,
+        market: 'US',
       },
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        'Authorization': `Bearer ${token}`,
       },
     });
-
-    console.log('API Response:', response.data.shows.items[0]); // Verifica la estructura del response
-    console.log(typeof(response.data.shows.items));
-
-    // Devolver los resultados de la búsqueda
     return response.data.shows.items;
   } catch (error) {
     console.error('Error searching for podcasts:', error);
-    // Asegúrate de capturar errores específicos
-    if (error.response) {
-      console.error('Error Response Data:', error.response.data);
-      console.error('Error Response Status:', error.response.status);
-    } else if (error.request) {
-      console.error('Error Request Data:', error.request);
-    } else {
-      console.error('Error Message:', error.message);
-    }
     throw error;
   }
 };
 
-
 export const searchSongs = async (query) => {
   try {
-    // Obtener el token de acceso
-    const accessToken = await getSpotifyToken();
-
-    // Realizar la solicitud a la API de Spotify para buscar canciones
+    const token = await getClientCredentialsToken();
     const response = await axios.get('https://api.spotify.com/v1/search', {
       params: {
         q: query,
-        type: 'track', // 'track' se usa para buscar canciones
-        limit: 10, // Puedes ajustar el límite según tus necesidades
-        market: 'US', // Puedes ajustar el mercado según tus necesidades
+        type: 'track',
+        limit: 10,
+        market: 'US',
       },
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        'Authorization': `Bearer ${token}`,
       },
     });
-
-    // Devolver los resultados de la búsqueda
     return response.data.tracks.items;
   } catch (error) {
     console.error('Error searching for songs:', error);
     throw error;
   }
-}
+};
+
+
+/*
+Maes este archivo contiene toda la lógica de interacción con la API de Spotify. 
+Es el archivo donde se implementa las funciones que realizan llamadas HTTP a la 
+API de Spotify, como obtener tokens de acceso, buscar artistas, canciones, 
+álbumes, acceder al perfil del usuario, etc. 
+Este archivo se encarga de gestionar la comunicación con la API de Spotify, 
+manejar los tokens de acceso y devolver los resultados de las solicitudes.
+*/
