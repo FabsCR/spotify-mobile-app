@@ -1,8 +1,8 @@
 import React from 'react';
-import { Image, Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const DetailScreen = ({ route }) => {
-  const { item } = route.params; // Asegúrate de que esto sea correcto
+  const { item } = route.params;
 
   // Verifica si item existe
   if (!item) {
@@ -15,15 +15,17 @@ const DetailScreen = ({ route }) => {
 
   const handleListenPreview = () => {
     if (item.preview_url) {
-      Linking.openURL(item.preview_url);
+      Linking.openURL(item.preview_url); // Abre la URL de preview en el navegador
     }
   };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.card}>
-        <Image source={{ uri: item.images?.[0]?.url }} style={styles.image} />
-        <Text style={styles.title}>{item.name || "No name available"}</Text>
+              <Image 
+          source={{ uri: item.album?.images?.[0]?.url || item.images?.[0]?.url }} 
+          style={styles.image} 
+        />
 
         {/* Información del artista */}
         {item.followers && (
@@ -96,9 +98,14 @@ const DetailScreen = ({ route }) => {
             <Text style={styles.trackDuration}>
               Duration: {Math.floor(item.duration_ms / 60000)}:{('0' + Math.floor((item.duration_ms % 60000) / 1000)).slice(-2)} min
             </Text>
-            <Text style={styles.trackPopularity}>
-              Popularity: {item.popularity}
-            </Text>
+            <Text style={styles.trackPopularity}>Popularity: {item.popularity}</Text>
+
+            {/* Botón Play Test */}
+            {item.preview_url && (
+              <TouchableOpacity style={styles.playButton} onPress={handleListenPreview}>
+                <Text style={styles.playButtonText}>Play Test</Text>
+              </TouchableOpacity>
+            )}
           </View>
         ) : (
           <Text style={styles.noTrackMessage}>No song details available.</Text>
@@ -112,16 +119,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
-    backgroundColor: '#000', // Fondo negro para toda la pantalla
+    backgroundColor: '#000',
   },
   card: {
     padding: 20,
     alignItems: 'center',
-    backgroundColor: '#1a1a1a', // Color del card, gris oscuro
+    backgroundColor: '#1a1a1a',
     borderRadius: 10,
     width: '90%',
     marginVertical: 20,
-    elevation: 5, // Sombra para dar efecto de card
+    elevation: 5,
   },
   image: {
     width: 200,
@@ -142,8 +149,8 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingVertical: 5,
     borderBottomWidth: 1,
-    borderBottomColor: '#444', // Color del borde
-    marginBottom: 5, // Espaciado entre secciones
+    borderBottomColor: '#444',
+    marginBottom: 5,
   },
   info: {
     fontSize: 16,
@@ -152,14 +159,14 @@ const styles = StyleSheet.create({
   infoValue: {
     fontSize: 16,
     color: '#fff',
-    fontWeight: '600', // Negrita para resaltar
+    fontWeight: '600',
   },
   descriptionContainer: {
     marginTop: 10,
     padding: 10,
-    backgroundColor: '#222', // Fondo gris oscuro para la descripción
+    backgroundColor: '#222',
     borderRadius: 8,
-    marginBottom: 20, // Espaciado después de la descripción
+    marginBottom: 20,
   },
   description: {
     fontSize: 16,
@@ -188,6 +195,18 @@ const styles = StyleSheet.create({
     color: '#bbb',
     fontSize: 16,
     textAlign: 'center',
+  },
+  playButton: {
+    marginTop: 15,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    backgroundColor: '#1DB954', // Color verde de Spotify
+    borderRadius: 8,
+  },
+  playButtonText: {
+    fontSize: 16,
+    color: '#fff',
+    fontWeight: 'bold',
   },
 });
 
