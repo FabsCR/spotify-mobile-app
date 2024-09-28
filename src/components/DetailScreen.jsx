@@ -21,96 +21,107 @@ const DetailScreen = ({ route }) => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Image source={{ uri: item.images?.[0]?.url }} style={styles.image} />
-      <Text style={styles.title}>{item.name || "No name available"}</Text>
+      <View style={styles.card}>
+        <Image source={{ uri: item.images?.[0]?.url }} style={styles.image} />
+        <Text style={styles.title}>{item.name || "No name available"}</Text>
 
-      {/* Información del artista */}
-      {item.followers && (
-        <View style={styles.infoContainer}>
-          <Text style={styles.info}>Followers:</Text>
-          <Text style={styles.infoValue}>{item.followers.total?.toLocaleString() || 'N/A'}</Text>
-        </View>
-      )}
+        {/* Información del artista */}
+        {item.followers && (
+          <View style={styles.infoContainer}>
+            <Text style={styles.info}>Followers:</Text>
+            <Text style={styles.infoValue}>{item.followers.total?.toLocaleString() || 'N/A'}</Text>
+          </View>
+        )}
 
-      {item.genres && item.genres.length > 0 && (
-        <View style={styles.infoContainer}>
-          <Text style={styles.info}>Genres:</Text>
-          <Text style={styles.infoValue}>{item.genres.join(', ')}</Text>
-        </View>
-      )}
+        {item.genres && item.genres.length > 0 && (
+          <View style={styles.infoContainer}>
+            <Text style={styles.info}>Genres:</Text>
+            <Text style={styles.infoValue}>{item.genres.join(', ')}</Text>
+          </View>
+        )}
 
-      {item.popularity !== undefined && (
-        <View style={styles.infoContainer}>
-          <Text style={styles.info}>Popularity:</Text>
-          <Text style={styles.infoValue}>{item.popularity}</Text>
-        </View>
-      )}
+        {item.popularity !== undefined && (
+          <View style={styles.infoContainer}>
+            <Text style={styles.info}>Popularity:</Text>
+            <Text style={styles.infoValue}>{item.popularity}</Text>
+          </View>
+        )}
 
-      {item.album && (
-        <View style={styles.infoContainer}>
-          <Text style={styles.info}>Album:</Text>
-          <Text style={styles.infoValue}>{item.album.name || 'N/A'}</Text>
-        </View>
-      )}
+        {item.album && (
+          <View style={styles.infoContainer}>
+            <Text style={styles.info}>Album:</Text>
+            <Text style={styles.infoValue}>{item.album.name || 'N/A'}</Text>
+          </View>
+        )}
 
-      {item.release_date && (
-        <View style={styles.infoContainer}>
-          <Text style={styles.info}>Release Date:</Text>
-          <Text style={styles.infoValue}>{new Date(item.release_date).toLocaleDateString() || 'N/A'}</Text>
-        </View>
-      )}
+        {item.release_date && (
+          <View style={styles.infoContainer}>
+            <Text style={styles.info}>Release Date:</Text>
+            <Text style={styles.infoValue}>{new Date(item.release_date).toLocaleDateString() || 'N/A'}</Text>
+          </View>
+        )}
 
-      {item.description && (
-        <View style={styles.descriptionContainer}>
-          <Text style={styles.description}>{item.description}</Text>
-        </View>
-      )}
+        {item.description && (
+          <View style={styles.descriptionContainer}>
+            <Text style={styles.description}>{item.description}</Text>
+          </View>
+        )}
 
-      {/* Información del programa */}
-      {item.publisher && (
-        <View style={styles.infoContainer}>
-          <Text style={styles.info}>Publisher:</Text>
-          <Text style={styles.infoValue}>{item.publisher || 'N/A'}</Text>
-        </View>
-      )}
+        {/* Información del programa */}
+        {item.publisher && (
+          <View style={styles.infoContainer}>
+            <Text style={styles.info}>Publisher:</Text>
+            <Text style={styles.infoValue}>{item.publisher || 'N/A'}</Text>
+          </View>
+        )}
 
-      {item.total_episodes !== undefined && (
-        <View style={styles.infoContainer}>
-          <Text style={styles.info}>Total Episodes:</Text>
-          <Text style={styles.infoValue}>{item.total_episodes}</Text>
-        </View>
-      )}
+        {item.total_episodes !== undefined && (
+          <View style={styles.infoContainer}>
+            <Text style={styles.info}>Total Episodes:</Text>
+            <Text style={styles.infoValue}>{item.total_episodes}</Text>
+          </View>
+        )}
 
-      {item.languages && item.languages.length > 0 && (
-        <View style={styles.infoContainer}>
-          <Text style={styles.info}>Languages:</Text>
-          <Text style={styles.infoValue}>{item.languages.join(', ')}</Text>
-        </View>
-      )}
+        {item.languages && item.languages.length > 0 && (
+          <View style={styles.infoContainer}>
+            <Text style={styles.info}>Languages:</Text>
+            <Text style={styles.infoValue}>{item.languages.join(', ')}</Text>
+          </View>
+        )}
 
-      {/* Información de la canción */}
-      {item.name && item.duration_ms ? (
-        <View style={styles.trackContainer}>
-          <Text style={styles.trackTitle}>Track: {item.name}</Text>
-          <Text style={styles.trackDuration}>
-            Duration: {Math.floor(item.duration_ms / 60000)}:{('0' + Math.floor((item.duration_ms % 60000) / 1000)).slice(-2)} min
-          </Text>
-          <Text style={styles.trackPopularity}>
-            Popularity: {item.popularity}
-          </Text>
-        </View>
-      ) : (
-        <Text style={styles.noTrackMessage}>No song details available.</Text>
-      )}
+        {/* Información de la canción */}
+        {item.name && item.duration_ms ? (
+          <View style={styles.trackContainer}>
+            <Text style={styles.trackTitle}>Track: {item.name}</Text>
+            <Text style={styles.trackDuration}>
+              Duration: {Math.floor(item.duration_ms / 60000)}:{('0' + Math.floor((item.duration_ms % 60000) / 1000)).slice(-2)} min
+            </Text>
+            <Text style={styles.trackPopularity}>
+              Popularity: {item.popularity}
+            </Text>
+          </View>
+        ) : (
+          <Text style={styles.noTrackMessage}>No song details available.</Text>
+        )}
+      </View>
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+    alignItems: 'center',
+    backgroundColor: '#000', // Fondo negro para toda la pantalla
+  },
+  card: {
     padding: 20,
     alignItems: 'center',
-    backgroundColor: '#000', // Cambiado a negro
+    backgroundColor: '#1a1a1a', // Color del card, gris oscuro
+    borderRadius: 10,
+    width: '90%',
+    marginVertical: 20,
+    elevation: 5, // Sombra para dar efecto de card
   },
   image: {
     width: 200,
