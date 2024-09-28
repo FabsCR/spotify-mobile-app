@@ -1,11 +1,10 @@
-// src/components/SearchScreen.js
 import React, { useState } from 'react';
-import { FlatList, Image, ScrollView, StyleSheet, Text, TextInput, View, Dimensions } from 'react-native';
-import { searchArtists, searchSongs, searchAlbums, searchPodcasts } from '../services/spotifyAPI.js';
+import { Dimensions, FlatList, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { searchAlbums, searchArtists, searchPodcasts, searchSongs } from '../services/spotifyAPI.js';
 
-const { width } = Dimensions.get('window'); // Obtener el ancho de la pantalla
+const { width } = Dimensions.get('window');
 
-const SearchScreen = () => {
+const SearchScreen = ({ navigation }) => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState({
     artists: [],
@@ -38,6 +37,12 @@ const SearchScreen = () => {
     }
   };
 
+  const handleNavigation = (item) => {
+    // Log item to see what data is being passed
+    console.log('Navigating to Details with item:', item);
+    navigation.navigate('Details', { item });
+  };
+
   return (
     <View style={styles.container}>
       <TextInput
@@ -61,10 +66,12 @@ const SearchScreen = () => {
                   horizontal
                   keyExtractor={(item) => item.id}
                   renderItem={({ item }) => (
-                    <View style={styles.resultContainer}>
-                      <Image source={{ uri: item.images[0]?.url }} style={styles.resultImage} />
-                      <Text style={styles.resultName}>{item.name}</Text>
-                    </View>
+                    <TouchableOpacity onPress={() => handleNavigation(item)}>
+                      <View style={styles.resultContainer}>
+                        <Image source={{ uri: item.images?.[0]?.url || 'default-image-url.jpg' }} style={styles.resultImage} />
+                        <Text style={styles.resultName}>{item.name}</Text>
+                      </View>
+                    </TouchableOpacity>
                   )}
                   showsHorizontalScrollIndicator={false}
                 />
@@ -80,10 +87,12 @@ const SearchScreen = () => {
                   horizontal
                   keyExtractor={(item) => item.id}
                   renderItem={({ item }) => (
-                    <View style={styles.resultContainer}>
-                      <Image source={{ uri: item.images[0]?.url }} style={styles.resultImage} />
-                      <Text style={styles.resultName}>{item.name}</Text>
-                    </View>
+                    <TouchableOpacity onPress={() => handleNavigation(item)}>
+                      <View style={styles.resultContainer}>
+                        <Image source={{ uri: item.images?.[0]?.url || 'default-image-url.jpg' }} style={styles.resultImage} />
+                        <Text style={styles.resultName}>{item.name}</Text>
+                      </View>
+                    </TouchableOpacity>
                   )}
                   showsHorizontalScrollIndicator={false}
                 />
@@ -99,11 +108,13 @@ const SearchScreen = () => {
                   horizontal
                   keyExtractor={(item) => item.id}
                   renderItem={({ item }) => (
-                    <View style={styles.resultContainer}>
-                      <Image source={{ uri: item.album.images[0]?.url }} style={styles.resultImage} />
-                      <Text style={styles.resultName}>{item.name}</Text>
-                      <Text style={styles.resultSubtitle}>{item.artists.map(a => a.name).join(', ')}</Text>
-                    </View>
+                    <TouchableOpacity onPress={() => handleNavigation(item)}>
+                      <View style={styles.resultContainer}>
+                        <Image source={{ uri: item.album.images?.[0]?.url || 'default-image-url.jpg' }} style={styles.resultImage} />
+                        <Text style={styles.resultName}>{item.name}</Text>
+                        <Text style={styles.resultSubtitle}>{item.artists.map(a => a.name).join(', ')}</Text>
+                      </View>
+                    </TouchableOpacity>
                   )}
                   showsHorizontalScrollIndicator={false}
                 />
@@ -119,10 +130,12 @@ const SearchScreen = () => {
                   horizontal
                   keyExtractor={(item) => item.id}
                   renderItem={({ item }) => (
-                    <View style={styles.resultContainer}>
-                      <Image source={{ uri: item.images[0]?.url }} style={styles.resultImage} />
-                      <Text style={styles.resultName}>{item.name}</Text>
-                    </View>
+                    <TouchableOpacity onPress={() => handleNavigation(item)}>
+                      <View style={styles.resultContainer}>
+                        <Image source={{ uri: item.images?.[0]?.url || 'default-image-url.jpg' }} style={styles.resultImage} />
+                        <Text style={styles.resultName}>{item.name}</Text>
+                      </View>
+                    </TouchableOpacity>
                   )}
                   showsHorizontalScrollIndicator={false}
                 />

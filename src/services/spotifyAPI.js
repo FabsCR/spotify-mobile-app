@@ -3,8 +3,8 @@ import { Buffer } from 'buffer';
 
 // Client Credentials para obtener token de acceso
 export const getClientCredentialsToken = async () => {
-  const clientId = 'CLIENT_ID';
-  const clientSecret = 'CLIENT_SECRET';
+  const clientId = 'df53639f2dd245f4a1c3b4c3e0b8dfda';
+  const clientSecret = '08638641c5894cee803b102e5a35c657';
   const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
 
   try {
@@ -39,6 +39,7 @@ export const searchArtists = async (query) => {
         limit: 10,
       },
     });
+
     return response.data.artists.items;
   } catch (error) {
     console.error('Error searching for artists:', error);
@@ -59,6 +60,7 @@ export const searchAlbums = async (query) => {
         'Authorization': `Bearer ${token}`,
       },
     });
+
     return response.data.albums.items;
   } catch (error) {
     console.error('Error searching for albums:', error);
@@ -80,6 +82,7 @@ export const searchPodcasts = async (query) => {
         'Authorization': `Bearer ${token}`,
       },
     });
+
     return response.data.shows.items;
   } catch (error) {
     console.error('Error searching for podcasts:', error);
@@ -101,6 +104,7 @@ export const searchSongs = async (query) => {
         'Authorization': `Bearer ${token}`,
       },
     });
+
     return response.data.tracks.items;
   } catch (error) {
     console.error('Error searching for songs:', error);
