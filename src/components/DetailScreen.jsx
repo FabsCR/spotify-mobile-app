@@ -1,157 +1,222 @@
+import React, { useEffect, useState } from 'react';
+import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, ActivityIndicator, Animated } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { Audio } from 'expo-av';
-import React, { useEffect, useState } from 'react';
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { getAlbumTracks, searchAlbums, searchSongs } from '../services/spotifyAPI';
 
-const DetailScreen = ({ route }) => {
+const DetailScreen = ({ route, navigation }) => {
   const { item } = route.params;
-  const [sound, setSound] = useState();
+  const [sound, setSound] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [progress, setProgress] = useState(0); // Progreso de la canción
-  const [duration, setDuration] = useState(0); // Duración total de la canción
+  const [progress, setProgress] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [albums, setAlbums] = useState([]);
+  const [songs, setSongs] = useState([]);
+  const [tracks, setTracks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const fadeAnim = useState(new Animated.Value(0))[0];
 
-  // Verifica si item existe
-  if (!item) {
+  useEffect(() => {
+    setLoading(true);
+    if (item.type === 'artist') {
+      fetchArtistDetails();
+    } else if (item.type === 'album') {
+      fetchAlbumTracks();
+    } else if (item.type === 'track' || item.type === 'show') {
+      setLoading(false);
+    }
+
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 500,
+      useNativeDriver: true,
+    }).start();
+  }, [item]);
+
+  const fetchArtistDetails = async () => {
+    try {
+      const albumsResult = await searchAlbums(item.name);
+      const songsResult = await searchSongs(item.name);
+      setAlbums(albumsResult);
+      setSongs(songsResult);
+    } catch (error) {
+      console.error('Error fetching artist details', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchAlbumTracks = async () => {
+    try {
+      const albumTracks = await getAlbumTracks(item.id);
+      setTracks(albumTracks);
+    } catch (error) {
+      console.error('Error fetching album tracks', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleListenPreview = async () => {
+    try {
+      if (item.preview_url) {
+        const { sound } = await Audio.Sound.createAsync(
+          { uri: item.preview_url },
+          { shouldPlay: true }
+        );
+        setSound(sound);
+        setIsPlaying(true);
+        
+        const status = await sound.getStatusAsync();
+        setDuration(status.durationMillis);
+
+        sound.setOnPlaybackStatusUpdate((status) => {
+          if (status.isLoaded) {
+            setProgress(status.positionMillis);
+            if (status.didJustFinish) {
+              setIsPlaying(false);
+              setProgress(0);
+              sound.unloadAsync();
+            }
+          }
+        });
+
+        await sound.playAsync();
+      } else {
+        alert('No preview available');
+      }
+    } catch (error) {
+      console.error('Error playing preview', error);
+    }
+  };
+
+  const handleStopSound = async () => {
+    try {
+      if (sound) {
+        await sound.stopAsync();
+        await sound.unloadAsync();
+        setSound(null);
+        setIsPlaying(false);
+        setProgress(0);
+      }
+    } catch (error) {
+      console.error('Error stopping sound', error);
+    }
+  };
+
+  const renderHeader = () => (
+    <Animated.View style={[styles.card, { opacity: fadeAnim }]}>
+      <Image 
+        source={{ uri: item.album?.images?.[0]?.url || item.images?.[0]?.url }} 
+        style={styles.image} 
+      />
+      {item.type === 'artist' && (
+        <>
+          <Text style={styles.title}>{item.name}</Text>
+          <Text style={styles.subtitle}>Followers: {item.followers.total.toLocaleString()}</Text>
+          <Text style={styles.subtitle}>Genres: {item.genres.join(', ')}</Text>
+        </>
+      )}
+      {item.type === 'album' && (
+        <>
+          <Text style={styles.title}>{item.name}</Text>
+          <Text style={styles.subtitle}>Release Date: {item.release_date}</Text>
+          <Text style={styles.subtitle}>Total Tracks: {item.total_tracks}</Text>
+        </>
+      )}
+      {item.type === 'track' && (
+        <>
+          <Text style={styles.title}>{item.name}</Text>
+          <Text style={styles.subtitle}>
+            Duration: {Math.floor(item.duration_ms / 60000)}:{Math.floor((item.duration_ms % 60000) / 1000)}
+          </Text>
+          <Text style={styles.subtitle}>Popularity: {item.popularity}</Text>
+
+          {/* Barra de Progreso */}
+          <Slider
+            style={styles.slider}
+            minimumValue={0}
+            maximumValue={duration}
+            value={progress}
+            onValueChange={handleStopSound}
+            minimumTrackTintColor="#1DB954"
+            maximumTrackTintColor="#fff"
+          />
+          <Text style={styles.progressText}>
+            {Math.floor(progress / 60000)}:{('0' + Math.floor((progress % 60000) / 1000)).slice(-2)} / 
+            {Math.floor(duration / 60000)}:{('0' + Math.floor((duration % 60000) / 1000)).slice(-2)}
+          </Text>
+
+          {/* Botón Play */}
+          {item.preview_url && !isPlaying && (
+            <TouchableOpacity style={styles.playButton} onPress={handleListenPreview}>
+              <Text style={styles.playButtonText}>Play Preview</Text>
+            </TouchableOpacity>
+          )}
+
+          {/* Botón Stop */}
+          {isPlaying && (
+            <TouchableOpacity style={styles.stopButton} onPress={handleStopSound}>
+              <Text style={styles.stopButtonText}>Stop</Text>
+            </TouchableOpacity>
+          )}
+        </>
+      )}
+      {item.type === 'show' && (
+        <>
+          <Text style={styles.title}>{item.name}</Text>
+          <Text style={styles.subtitle}>Publisher: {item.publisher}</Text>
+          <Text style={styles.description}>{item.description}</Text>
+        </>
+      )}
+    </Animated.View>
+  );
+
+  const renderAlbums = ({ item: album }) => (
+    <TouchableOpacity onPress={() => navigation.navigate('Details', { item: album })}>
+      <View style={styles.albumContainer}>
+        <Image source={{ uri: album.images[0].url }} style={styles.albumImage} />
+        <Text style={styles.albumTitle}>{album.name}</Text>
+      </View>
+    </TouchableOpacity>
+  );
+
+  const renderTracks = ({ item: track }) => (
+    <TouchableOpacity onPress={() => navigation.navigate('Details', { item: track })}>
+      <View style={styles.songContainer}>
+        <Text style={styles.songTitle}>{track.name}</Text>
+      </View>
+    </TouchableOpacity>
+  );
+
+  if (loading) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.errorText}>Item not found.</Text>
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#1DB954" />
       </View>
     );
   }
 
-  const handleListenPreview = async () => {
-    if (item.preview_url) {
-      const { sound } = await Audio.Sound.createAsync(
-        { uri: item.preview_url },
-        { shouldPlay: true }
-      );
-      setSound(sound);
-      setIsPlaying(true);
-
-      // Obtener la duración total de la canción
-      const status = await sound.getStatusAsync();
-      setDuration(status.durationMillis);
-
-      // Actualizar el progreso de la canción
-      sound.setOnPlaybackStatusUpdate((status) => {
-        if (status.isLoaded) {
-          setProgress(status.positionMillis);
-          if (status.didJustFinish) {
-            setIsPlaying(false);
-            setProgress(0); // Reiniciar el progreso cuando termine
-            sound.unloadAsync(); // Liberar el sonido después de terminar
-          }
-        }
-      });
-
-      await sound.playAsync();
-    }
-  };
-
-  useEffect(() => {
-    let interval;
-    if (isPlaying && sound) {
-      // Configura un intervalo para actualizar el progreso cada 100 ms
-      interval = setInterval(async () => {
-        const status = await sound.getStatusAsync();
-        if (status.isLoaded) {
-          setProgress(status.positionMillis);
-        }
-      }, 100);
-    }
-    
-    // Limpieza del intervalo al desmontar el componente o detener el sonido
-    return () => {
-      if (interval) {
-        clearInterval(interval);
-      }
-    };
-  }, [isPlaying, sound]);
-
-  const handleStopSound = async () => {
-    if (sound) {
-      await sound.stopAsync();
-      sound.unloadAsync(); // Liberar el sonido después de detenerlo
-      setSound(null); // Limpiar el estado
-      setIsPlaying(false);
-      setProgress(0); // Reiniciar el progreso
-    }
-  };
-
-  const handleSeek = async (value) => {
-    if (sound) {
-      const seekToMillis = value;
-      await sound.setPositionAsync(seekToMillis);
-      setProgress(seekToMillis);
-    }
-  };
-
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.card}>
-        <Image 
-          source={{ uri: item.album?.images?.[0]?.url || item.images?.[0]?.url }} 
-          style={styles.image} 
-        />
-
-        {/* Información del artista */}
-        {item.followers && (
-          <View style={styles.infoContainer}>
-            <Text style={styles.info}>Followers:</Text>
-            <Text style={styles.infoValue}>{item.followers.total?.toLocaleString() || 'N/A'}</Text>
-          </View>
-        )}
-
-        {/* Otras secciones de información... */}
-
-        {/* Información de la canción */}
-        {item.name && item.duration_ms ? (
-          <View style={styles.trackContainer}>
-            <Text style={styles.trackTitle}>Song: {item.name}</Text>
-            <Text style={styles.trackDuration}>
-              Duration: {Math.floor(item.duration_ms / 60000)}:{('0' + Math.floor((item.duration_ms % 60000) / 1000)).slice(-2)} min
-            </Text>
-            <Text style={styles.trackPopularity}>Popularity: {item.popularity}</Text>
-
-            {/* Barra de progreso */}
-            <Slider
-              style={styles.slider}
-              minimumValue={0}
-              maximumValue={duration}
-              value={progress}
-              onValueChange={handleSeek}
-              minimumTrackTintColor="#1DB954" // Color verde de Spotify
-              maximumTrackTintColor="#fff"
-            />
-            <Text style={styles.progressText}>
-              {Math.floor(progress / 60000)}:{('0' + Math.floor((progress % 60000) / 1000)).slice(-2)} / 
-              {Math.floor(duration / 60000)}:{('0' + Math.floor((duration % 60000) / 1000)).slice(-2)}
-            </Text>
-
-            {/* Botón Play Test */}
-            {item.preview_url && !isPlaying && (
-              <TouchableOpacity style={styles.playButton} onPress={handleListenPreview}>
-                <Text style={styles.playButtonText}>Play Test</Text>
-              </TouchableOpacity>
-            )}
-            {/* Botón Stop */}
-            {isPlaying && (
-              <TouchableOpacity style={styles.stopButton} onPress={handleStopSound}>
-                <Text style={styles.stopButtonText}>Stop</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        ) : (
-          <Text style={styles.noTrackMessage}>No song details available.</Text>
-        )}
-      </View>
-    </ScrollView>
+    <FlatList
+      data={item.type === 'artist' ? albums : tracks}
+      keyExtractor={(item) => item.id}
+      ListHeaderComponent={renderHeader}
+      renderItem={item.type === 'artist' ? renderAlbums : renderTracks}
+      contentContainerStyle={styles.container}
+    />
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    padding: 20,
+    backgroundColor: '#000',
+    flexGrow: 1,
+  },
+  loadingContainer: {
     flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#000',
   },
@@ -160,74 +225,49 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#1a1a1a',
     borderRadius: 10,
-    width: '90%',
-    marginVertical: 20,
-    elevation: 5,
+    width: '100%',
+    marginBottom: 20,
   },
   image: {
-    width: 200,
-    height: 200,
+    width: 250,
+    height: 250,
     borderRadius: 10,
     marginBottom: 20,
   },
   title: {
-    fontSize: 24,
+    fontSize: 30,
     color: '#fff',
     fontWeight: 'bold',
-    textAlign: 'center',
     marginBottom: 10,
+    textAlign: 'center',
   },
-  infoContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-    paddingVertical: 5,
-    borderBottomWidth: 1,
-    borderBottomColor: '#444',
+  subtitle: {
+    fontSize: 18,
+    color: '#bbb',
     marginBottom: 5,
-  },
-  info: {
-    fontSize: 16,
-    color: '#bbb',
-  },
-  infoValue: {
-    fontSize: 16,
-    color: '#fff',
-    fontWeight: '600',
-  },
-  descriptionContainer: {
-    marginTop: 10,
-    padding: 10,
-    backgroundColor: '#222',
-    borderRadius: 8,
-    marginBottom: 20,
-  },
-  description: {
-    fontSize: 16,
-    color: '#fff',
     textAlign: 'center',
   },
-  trackContainer: {
-    marginTop: 20,
-    width: '100%',
-  },
-  trackTitle: {
-    fontSize: 20,
-    color: '#fff',
+  albumContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 10,
-    fontWeight: 'bold',
   },
-  trackDuration: {
+  albumImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 5,
+    marginRight: 10,
+  },
+  albumTitle: {
     fontSize: 16,
     color: '#fff',
   },
-  trackPopularity: {
+  songContainer: {
+    marginBottom: 10,
+  },
+  songTitle: {
     fontSize: 16,
     color: '#fff',
-  },
-  noTrackMessage: {
-    color: '#bbb',
-    fontSize: 16,
     textAlign: 'center',
   },
   slider: {
@@ -244,25 +284,32 @@ const styles = StyleSheet.create({
     marginTop: 15,
     paddingVertical: 10,
     paddingHorizontal: 20,
-    backgroundColor: '#1DB954', // Color verde de Spotify
+    backgroundColor: '#1DB954',
     borderRadius: 8,
   },
   playButtonText: {
     fontSize: 16,
     color: '#fff',
     fontWeight: 'bold',
+    textAlign: 'center',
   },
   stopButton: {
     marginTop: 15,
     paddingVertical: 10,
     paddingHorizontal: 20,
-    backgroundColor: '#FF0000', // Color rojo para el botón de detener
+    backgroundColor: '#FF0000',
     borderRadius: 8,
   },
   stopButtonText: {
     fontSize: 16,
     color: '#fff',
     fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  description: {
+    fontSize: 16,
+    color: '#fff',
+    textAlign: 'center',
   },
 });
 

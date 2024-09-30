@@ -3,8 +3,8 @@ import { Buffer } from 'buffer';
 
 // Client Credentials para obtener token de acceso
 export const getClientCredentialsToken = async () => {
-  const clientId = 'df53639f2dd245f4a1c3b4c3e0b8dfda';
-  const clientSecret = '08638641c5894cee803b102e5a35c657';
+  const clientId = 'eac9121f1285468c9c1eddd67a3ff43c';
+  const clientSecret = '5933264a396d49e9bd3f9eb1b9400444';
   const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
 
   try {
@@ -109,6 +109,22 @@ export const searchSongs = async (query) => {
   } catch (error) {
     console.error('Error searching for songs:', error);
     throw error;
+  }
+};
+
+export const getAlbumTracks = async (albumId) => {
+  try {
+    const token = await getClientCredentialsToken();
+    const response = await axios.get(`https://api.spotify.com/v1/albums/${albumId}/tracks`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    return response.data.items;
+  } catch (error) {
+    console.error('Error fetching album tracks:', error);
+    return [];
   }
 };
 
