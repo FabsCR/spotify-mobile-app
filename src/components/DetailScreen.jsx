@@ -1,8 +1,14 @@
-import React from 'react';
-import { Image, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Slider from '@react-native-community/slider';
+import { Audio } from 'expo-av';
+import React, { useEffect, useState } from 'react';
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const DetailScreen = ({ route }) => {
   const { item } = route.params;
+  const [sound, setSound] = useState();
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [progress, setProgress] = useState(0); // Progreso de la canción
+  const [duration, setDuration] = useState(0); // Duración total de la canción
 
   // Verifica si item existe
   if (!item) {
@@ -13,16 +19,77 @@ const DetailScreen = ({ route }) => {
     );
   }
 
-  const handleListenPreview = () => {
+  const handleListenPreview = async () => {
     if (item.preview_url) {
-      Linking.openURL(item.preview_url); // Abre la URL de preview en el navegador
+      const { sound } = await Audio.Sound.createAsync(
+        { uri: item.preview_url },
+        { shouldPlay: true }
+      );
+      setSound(sound);
+      setIsPlaying(true);
+
+      // Obtener la duración total de la canción
+      const status = await sound.getStatusAsync();
+      setDuration(status.durationMillis);
+
+      // Actualizar el progreso de la canción
+      sound.setOnPlaybackStatusUpdate((status) => {
+        if (status.isLoaded) {
+          setProgress(status.positionMillis);
+          if (status.didJustFinish) {
+            setIsPlaying(false);
+            setProgress(0); // Reiniciar el progreso cuando termine
+            sound.unloadAsync(); // Liberar el sonido después de terminar
+          }
+        }
+      });
+
+      await sound.playAsync();
+    }
+  };
+
+  useEffect(() => {
+    let interval;
+    if (isPlaying && sound) {
+      // Configura un intervalo para actualizar el progreso cada 100 ms
+      interval = setInterval(async () => {
+        const status = await sound.getStatusAsync();
+        if (status.isLoaded) {
+          setProgress(status.positionMillis);
+        }
+      }, 100);
+    }
+    
+    // Limpieza del intervalo al desmontar el componente o detener el sonido
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [isPlaying, sound]);
+
+  const handleStopSound = async () => {
+    if (sound) {
+      await sound.stopAsync();
+      sound.unloadAsync(); // Liberar el sonido después de detenerlo
+      setSound(null); // Limpiar el estado
+      setIsPlaying(false);
+      setProgress(0); // Reiniciar el progreso
+    }
+  };
+
+  const handleSeek = async (value) => {
+    if (sound) {
+      const seekToMillis = value;
+      await sound.setPositionAsync(seekToMillis);
+      setProgress(seekToMillis);
     }
   };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.card}>
-              <Image 
+        <Image 
           source={{ uri: item.album?.images?.[0]?.url || item.images?.[0]?.url }} 
           style={styles.image} 
         />
@@ -35,75 +102,42 @@ const DetailScreen = ({ route }) => {
           </View>
         )}
 
-        {item.genres && item.genres.length > 0 && (
-          <View style={styles.infoContainer}>
-            <Text style={styles.info}>Genres:</Text>
-            <Text style={styles.infoValue}>{item.genres.join(', ')}</Text>
-          </View>
-        )}
-
-        {item.popularity !== undefined && (
-          <View style={styles.infoContainer}>
-            <Text style={styles.info}>Popularity:</Text>
-            <Text style={styles.infoValue}>{item.popularity}</Text>
-          </View>
-        )}
-
-        {item.album && (
-          <View style={styles.infoContainer}>
-            <Text style={styles.info}>Album:</Text>
-            <Text style={styles.infoValue}>{item.album.name || 'N/A'}</Text>
-          </View>
-        )}
-
-        {item.release_date && (
-          <View style={styles.infoContainer}>
-            <Text style={styles.info}>Release Date:</Text>
-            <Text style={styles.infoValue}>{new Date(item.release_date).toLocaleDateString() || 'N/A'}</Text>
-          </View>
-        )}
-
-        {item.description && (
-          <View style={styles.descriptionContainer}>
-            <Text style={styles.description}>{item.description}</Text>
-          </View>
-        )}
-
-        {/* Información del programa */}
-        {item.publisher && (
-          <View style={styles.infoContainer}>
-            <Text style={styles.info}>Publisher:</Text>
-            <Text style={styles.infoValue}>{item.publisher || 'N/A'}</Text>
-          </View>
-        )}
-
-        {item.total_episodes !== undefined && (
-          <View style={styles.infoContainer}>
-            <Text style={styles.info}>Total Episodes:</Text>
-            <Text style={styles.infoValue}>{item.total_episodes}</Text>
-          </View>
-        )}
-
-        {item.languages && item.languages.length > 0 && (
-          <View style={styles.infoContainer}>
-            <Text style={styles.info}>Languages:</Text>
-            <Text style={styles.infoValue}>{item.languages.join(', ')}</Text>
-          </View>
-        )}
+        {/* Otras secciones de información... */}
 
         {/* Información de la canción */}
         {item.name && item.duration_ms ? (
           <View style={styles.trackContainer}>
-            <Text style={styles.trackTitle}>Track: {item.name}</Text>
+            <Text style={styles.trackTitle}>Song: {item.name}</Text>
             <Text style={styles.trackDuration}>
               Duration: {Math.floor(item.duration_ms / 60000)}:{('0' + Math.floor((item.duration_ms % 60000) / 1000)).slice(-2)} min
             </Text>
             <Text style={styles.trackPopularity}>Popularity: {item.popularity}</Text>
 
+            {/* Barra de progreso */}
+            <Slider
+              style={styles.slider}
+              minimumValue={0}
+              maximumValue={duration}
+              value={progress}
+              onValueChange={handleSeek}
+              minimumTrackTintColor="#1DB954" // Color verde de Spotify
+              maximumTrackTintColor="#fff"
+            />
+            <Text style={styles.progressText}>
+              {Math.floor(progress / 60000)}:{('0' + Math.floor((progress % 60000) / 1000)).slice(-2)} / 
+              {Math.floor(duration / 60000)}:{('0' + Math.floor((duration % 60000) / 1000)).slice(-2)}
+            </Text>
+
             {/* Botón Play Test */}
-            {item.preview_url && (
+            {item.preview_url && !isPlaying && (
               <TouchableOpacity style={styles.playButton} onPress={handleListenPreview}>
                 <Text style={styles.playButtonText}>Play Test</Text>
+              </TouchableOpacity>
+            )}
+            {/* Botón Stop */}
+            {isPlaying && (
+              <TouchableOpacity style={styles.stopButton} onPress={handleStopSound}>
+                <Text style={styles.stopButtonText}>Stop</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -196,6 +230,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
   },
+  slider: {
+    width: '100%',
+    height: 40,
+    marginTop: 10,
+  },
+  progressText: {
+    color: '#fff',
+    textAlign: 'center',
+    marginTop: 5,
+  },
   playButton: {
     marginTop: 15,
     paddingVertical: 10,
@@ -204,6 +248,18 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   playButtonText: {
+    fontSize: 16,
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  stopButton: {
+    marginTop: 15,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    backgroundColor: '#FF0000', // Color rojo para el botón de detener
+    borderRadius: 8,
+  },
+  stopButtonText: {
     fontSize: 16,
     color: '#fff',
     fontWeight: 'bold',
