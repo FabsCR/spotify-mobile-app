@@ -1,26 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView, Linking, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import * as AuthSession from 'expo-auth-session';
 import * as SecureStore from 'expo-secure-store';
 import { SPOTIFY_CLIENT_ID, SPOTIFY_REDIRECT_URI_WEB, SPOTIFY_REDIRECT_URI_MOBILE, SPOTIFY_SCOPE, SPOTIFY_AUTH_ENDPOINT, SPOTIFY_RESPONSE_TYPE } from '@env';
-
-const CLIENT_ID = SPOTIFY_CLIENT_ID;
-const AUTH_ENDPOINT = SPOTIFY_AUTH_ENDPOINT;
-const RESPONSE_TYPE = SPOTIFY_RESPONSE_TYPE;
-const SCOPE = SPOTIFY_SCOPE;
 
 // URI de redirección dinámica según el entorno
 const REDIRECT_URI = Platform.OS === 'web'
   ? SPOTIFY_REDIRECT_URI_WEB // Web
-  : SPOTIFY_REDIRECT_URI_MOBILE; // Expo Go
+  : SPOTIFY_REDIRECT_URI_MOBILE; // Mobile (Expo Go)
 
 const LoginScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const navigation = useNavigation();
   const [authToken, setAuthToken] = useState(null);
 
-  // Comprobar si hay un token guardado en el almacenamiento seguro o localStorage
   useEffect(() => {
     const checkToken = async () => {
       if (Platform.OS === 'web' && window.location.hash) {
@@ -28,7 +21,6 @@ const LoginScreen = () => {
         const params = new URLSearchParams(hash.replace('#', ''));
         const token = params.get('access_token');
         if (token) {
-          console.log("Token found in URL:", token); // Verificar si el token está en la URL
           await storeToken(token);
           setAuthToken(token);
           navigation.navigate('Home');
@@ -38,74 +30,64 @@ const LoginScreen = () => {
         if (storedToken) {
           setAuthToken(storedToken);
           navigation.navigate('Home');
-        } else {
-          console.log("No token found, staying in LoginScreen.");
         }
       }
     };
-  
+
     checkToken();
   }, []);
 
-  // Función para iniciar sesión con Spotify
   const handleLogin = async () => {
-    try {
-      const authUrl = `${AUTH_ENDPOINT}?client_id=${CLIENT_ID}&response_type=${RESPONSE_TYPE}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${encodeURIComponent(SCOPE)}`;
-  
-      if (Platform.OS === 'web') {
-        window.location.href = authUrl;
-      } else {
-        const result = await AuthSession.startAsync({ authUrl });
-        if (result.type === 'success') {
-          const token = result.params.access_token;
-          console.log("Token received:", token);
-          setAuthToken(token);
-          await storeToken(token);
-          navigation.navigate('Home');
-        } else {
-          console.log('Login failed');
-        }
+    const authUrl = `${SPOTIFY_AUTH_ENDPOINT}?client_id=${SPOTIFY_CLIENT_ID}&response_type=${SPOTIFY_RESPONSE_TYPE}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${encodeURIComponent(SPOTIFY_SCOPE)}`;
+
+    if (Platform.OS === 'web') {
+      window.location.href = authUrl;
+    } else {
+      // Abrir el navegador en dispositivos móviles
+      try {
+        Linking.openURL(authUrl);
+
+        // Escuchar la redirección de vuelta a la app
+        Linking.addEventListener('url', async (event) => {
+          const { url } = event;
+          const token = url.match(/access_token=([^&]*)/)[1];
+          if (token) {
+            await storeToken(token);
+            setAuthToken(token);
+            navigation.navigate('Home');
+          }
+        });
+      } catch (error) {
+        console.error('Error during login', error);
       }
-    } catch (error) {
-      console.error('Error during login', error);
     }
   };
 
-  // Almacenar el token usando SecureStore para móviles o localStorage para web
   const storeToken = async (token) => {
     try {
       if (Platform.OS === 'web') {
         localStorage.setItem('spotify_token', token);
-        console.log("Token stored in localStorage:", token);
       } else {
         await SecureStore.setItemAsync('spotify_token', token);
-        console.log("Token stored in SecureStore:", token);
       }
     } catch (error) {
       console.error('Failed to store token', error);
     }
   };
 
-  // Recuperar el token almacenado
   const retrieveToken = async () => {
     try {
       let token;
       if (Platform.OS === 'web') {
         token = localStorage.getItem('spotify_token');
-        console.log("Token retrieved from localStorage:", token);
       } else {
         token = await SecureStore.getItemAsync('spotify_token');
-        console.log("Token retrieved from SecureStore:", token);
       }
       return token;
     } catch (error) {
       console.error('Failed to retrieve token', error);
       return null;
     }
-  };
-
-  const openLink = (url) => {
-    Linking.openURL(url);
   };
 
   return (
@@ -130,20 +112,8 @@ const LoginScreen = () => {
             <ScrollView contentContainerStyle={styles.modalContent}>
               <Text style={styles.modalTitle}>About Us</Text>
               <Text style={styles.modalText}>
-                SpotyTEC es una app diseñada para ayudarte a buscar contenido en Spotify. Con SpotyTEC, puedes encontrar canciones, álbumes, artistas y podcasts usando la API de Spotify.
+                SpotyTEC es una app diseñada para ayudarte a buscar contenido en Spotify.
               </Text>
-              <View style={styles.footer}>
-                <Text style={styles.footerTitle}>Developers:</Text>
-                <TouchableOpacity onPress={() => openLink('https://github.com/FabsCR')}>
-                  <Text style={styles.footerLink}>Fabian Fernandez</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => openLink('https://github.com/rooseveltalej')}>
-                  <Text style={styles.footerLink}>Roosevelt Perez</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => openLink('https://github.com/LuisMendezTEC')}>
-                  <Text style={styles.footerLink}>Luis Mendez</Text>
-                </TouchableOpacity>
-              </View>
             </ScrollView>
             <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
               <Text style={styles.closeButtonText}>Cerrar</Text>
@@ -221,22 +191,6 @@ const styles = StyleSheet.create({
     color: '#ddd',
     textAlign: 'center',
     marginBottom: 20,
-  },
-  footer: {
-    marginTop: 20,
-    alignItems: 'center',
-  },
-  footerTitle: {
-    fontSize: 18,
-    color: '#fff',
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  footerLink: {
-    fontSize: 16,
-    color: '#1DB954',
-    marginBottom: 5,
-    textAlign: 'center',
   },
   closeButton: {
     backgroundColor: '#1DB954',
