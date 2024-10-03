@@ -1,10 +1,11 @@
 import axios from 'axios';
 import { Buffer } from 'buffer';
+import { SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET } from '@env';
 
 // Client Credentials para obtener token de acceso
 export const getClientCredentialsToken = async () => {
-  const clientId = 'eac9121f1285468c9c1eddd67a3ff43c';
-  const clientSecret = '5933264a396d49e9bd3f9eb1b9400444';
+  const clientId = SPOTIFY_CLIENT_ID;
+  const clientSecret = SPOTIFY_CLIENT_SECRET;
   const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
 
   try {
@@ -128,12 +129,62 @@ export const getAlbumTracks = async (albumId) => {
   }
 };
 
+// Guardar una canción en la biblioteca del usuario
+export const saveTrack = async (trackId, token) => {
+  try {
+    const response = await axios.put(`https://api.spotify.com/v1/me/tracks?ids=${trackId}`, {}, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error saving song:', error);
+    throw error;
+  }
+};
 
-/*
-Maes este archivo contiene toda la lógica de interacción con la API de Spotify. 
-Es el archivo donde se implementa las funciones que realizan llamadas HTTP a la 
-API de Spotify, como obtener tokens de acceso, buscar artistas, canciones, 
-álbumes, acceder al perfil del usuario, etc. 
-Este archivo se encarga de gestionar la comunicación con la API de Spotify, 
-manejar los tokens de acceso y devolver los resultados de las solicitudes.
-*/
+// Eliminar una canción de la biblioteca del usuario
+export const removeTrack = async (trackId, token) => {
+  try {
+    const response = await axios.delete(`https://api.spotify.com/v1/me/tracks?ids=${trackId}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error removing song:', error);
+    throw error;
+  }
+};
+
+// Seguir a un artista
+export const followArtist = async (artistId, token) => {
+  try {
+    const response = await axios.put(`https://api.spotify.com/v1/me/following?type=artist&ids=${artistId}`, {}, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error following artist:', error);
+    throw error;
+  }
+};
+
+// Dejar de seguir a un artista
+export const unfollowArtist = async (artistId, token) => {
+  try {
+    const response = await axios.delete(`https://api.spotify.com/v1/me/following?type=artist&ids=${artistId}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error unfollowing artist:', error);
+    throw error;
+  }
+};

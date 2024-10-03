@@ -1,15 +1,99 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView, Linking } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView, Linking, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import * as AuthSession from 'expo-auth-session';
+import * as SecureStore from 'expo-secure-store';
+import { SPOTIFY_CLIENT_ID, SPOTIFY_REDIRECT_URI_WEB, SPOTIFY_REDIRECT_URI_MOBILE, SPOTIFY_SCOPE, SPOTIFY_AUTH_ENDPOINT, SPOTIFY_RESPONSE_TYPE } from '@env';
+
+// URI de redirección dinámica según el entorno
+const REDIRECT_URI = Platform.OS === 'web'
+  ? SPOTIFY_REDIRECT_URI_WEB // Web
+  : SPOTIFY_REDIRECT_URI_MOBILE; // Mobile (Expo Go)
 
 const LoginScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const navigation = useNavigation();
+  const [authToken, setAuthToken] = useState(null);
 
-  const handleLogin = () => {
-    // maes aqui va la logica para redireccion OAUTH en un futuro
-    // por ahora se navega directamente al homescreen que hizo luisito fuap
-    navigation.navigate('Home');
+  // Comprobar si hay un token guardado en el almacenamiento seguro o localStorage
+  useEffect(() => {
+    const checkToken = async () => {
+      if (Platform.OS === 'web' && window.location.hash) {
+        const hash = window.location.hash;
+        const params = new URLSearchParams(hash.replace('#', ''));
+        const token = params.get('access_token');
+        if (token) {
+          console.log("Token found in URL:", token);
+          await storeToken(token);
+          setAuthToken(token);
+          navigation.navigate('Home');
+        }
+      } else {
+        const storedToken = await retrieveToken();
+        if (storedToken) {
+          setAuthToken(storedToken);
+          navigation.navigate('Home');
+        } else {
+          console.log("No token found, staying in LoginScreen.");
+        }
+      }
+    };
+
+    checkToken();
+  }, []);
+
+  const handleLogin = async () => {
+    const authUrl = `${SPOTIFY_AUTH_ENDPOINT}?client_id=${SPOTIFY_CLIENT_ID}&response_type=${SPOTIFY_RESPONSE_TYPE}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${encodeURIComponent(SPOTIFY_SCOPE)}`;
+
+    if (Platform.OS === 'web') {
+      window.location.href = authUrl;
+    } else {
+      try {
+        Linking.openURL(authUrl);
+        Linking.addEventListener('url', async (event) => {
+          const { url } = event;
+          const token = url.match(/access_token=([^&]*)/)[1];
+          if (token) {
+            await storeToken(token);
+            setAuthToken(token);
+            navigation.navigate('Home');
+          }
+        });
+      } catch (error) {
+        console.error('Error during login', error);
+      }
+    }
+  };
+
+  const storeToken = async (token) => {
+    try {
+      if (Platform.OS === 'web') {
+        localStorage.setItem('spotify_token', token);
+        console.log("Token stored in localStorage:", token);
+      } else {
+        await SecureStore.setItemAsync('spotify_token', token);
+        console.log("Token stored in SecureStore:", token);
+      }
+    } catch (error) {
+      console.error('Failed to store token', error);
+    }
+  };
+
+  const retrieveToken = async () => {
+    try {
+      let token;
+      if (Platform.OS === 'web') {
+        token = localStorage.getItem('spotify_token');
+        console.log("Token retrieved from localStorage:", token);
+      } else {
+        token = await SecureStore.getItemAsync('spotify_token');
+        console.log("Token retrieved from SecureStore:", token);
+      }
+      return token;
+    } catch (error) {
+      console.error('Failed to retrieve token', error);
+      return null;
+    }
   };
 
   const openLink = (url) => {
@@ -25,8 +109,8 @@ const LoginScreen = () => {
       <TouchableOpacity style={styles.aboutButton} onPress={() => setModalVisible(true)}>
         <Text style={styles.aboutText}>About Us</Text>
       </TouchableOpacity>
-      
-      {/* Modal for About Us */}
+
+      {/* Modal para About Us */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -38,7 +122,7 @@ const LoginScreen = () => {
             <ScrollView contentContainerStyle={styles.modalContent}>
               <Text style={styles.modalTitle}>About Us</Text>
               <Text style={styles.modalText}>
-                SpotyTEC is an app designed to help you search for content on Spotify. With SpotyTEC, you can find songs, albums, artists, and podcasts using the Spotify API.
+                SpotyTEC es una app diseñada para ayudarte a buscar contenido en Spotify. Con SpotyTEC, puedes encontrar canciones, álbumes, artistas y podcasts usando la API de Spotify.
               </Text>
               <View style={styles.footer}>
                 <Text style={styles.footerTitle}>Developers:</Text>
@@ -54,7 +138,7 @@ const LoginScreen = () => {
               </View>
             </ScrollView>
             <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
-              <Text style={styles.closeButtonText}>Close</Text>
+              <Text style={styles.closeButtonText}>Cerrar</Text>
             </TouchableOpacity>
           </View>
         </View>
