@@ -1,6 +1,7 @@
 import { SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET } from '@env';
 import axios from 'axios';
 import { Buffer } from 'buffer';
+//test
 
 // Client Credentials para obtener token de acceso
 export const getClientCredentialsToken = async () => {
