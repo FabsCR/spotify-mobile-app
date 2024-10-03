@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView, Linking, Platform } from 'react-native';
+import { SPOTIFY_AUTH_ENDPOINT, SPOTIFY_CLIENT_ID, SPOTIFY_REDIRECT_URI_MOBILE, SPOTIFY_REDIRECT_URI_WEB, SPOTIFY_RESPONSE_TYPE, SPOTIFY_SCOPE } from '@env';
 import { useNavigation } from '@react-navigation/native';
-import * as AuthSession from 'expo-auth-session';
 import * as SecureStore from 'expo-secure-store';
-import { SPOTIFY_CLIENT_ID, SPOTIFY_REDIRECT_URI_WEB, SPOTIFY_REDIRECT_URI_MOBILE, SPOTIFY_SCOPE, SPOTIFY_AUTH_ENDPOINT, SPOTIFY_RESPONSE_TYPE } from '@env';
+import React, { useEffect, useState } from 'react';
+import { Linking, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 // URI de redirección dinámica según el entorno
 const REDIRECT_URI = Platform.OS === 'web'
@@ -30,6 +29,7 @@ const LoginScreen = () => {
         }
       } else {
         const storedToken = await retrieveToken();
+        console.log("Token found in storage:", storedToken);
         if (storedToken) {
           setAuthToken(storedToken);
           navigation.navigate('Home');
