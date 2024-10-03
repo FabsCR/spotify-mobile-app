@@ -22,6 +22,13 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "spotifyClientId": "eac9121f1285468c9c1eddd67a3ff43c",
+      "spotifyRedirectUri": "exp://192.168.0.101:8081/callback",
+      "eas": {
+        "projectId": "tu-project-id"
+      }
     }
   }
 }
