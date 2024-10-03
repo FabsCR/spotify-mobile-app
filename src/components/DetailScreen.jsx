@@ -2,7 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, ActivityIndicator, Animated } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { Audio } from 'expo-av';
-import { getAlbumTracks, searchAlbums, searchSongs } from '../services/spotifyAPI';
+import { getAlbumTracks, searchAlbums, searchSongs, saveTrack, removeTrack, followArtist, unfollowArtist } from '../services/spotifyAPI';
+import { SPOTIFY_ACCESS_TOKEN } from '@env';
+import * as SecureStore from 'expo-secure-store';
 
 const DetailScreen = ({ route, navigation }) => {
   const { item } = route.params;
@@ -15,6 +17,8 @@ const DetailScreen = ({ route, navigation }) => {
   const [tracks, setTracks] = useState([]);
   const [loading, setLoading] = useState(true);
   const fadeAnim = useState(new Animated.Value(0))[0];
+  const [isSaved, setIsSaved] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -57,6 +61,10 @@ const DetailScreen = ({ route, navigation }) => {
     }
   };
 
+  const getUserAccessToken = async () => {
+    return await SecureStore.getItemAsync('spotify_token');
+  };
+
   const handleListenPreview = async () => {
     try {
       if (item.preview_url) {
@@ -66,7 +74,7 @@ const DetailScreen = ({ route, navigation }) => {
         );
         setSound(sound);
         setIsPlaying(true);
-        
+
         const status = await sound.getStatusAsync();
         setDuration(status.durationMillis);
 
@@ -104,6 +112,36 @@ const DetailScreen = ({ route, navigation }) => {
     }
   };
 
+  const handleSaveSong = async () => {
+    const token = await getUserAccessToken(); // Obtener access token del usuario
+    if (!token) {
+      console.error('No access token found');
+      return;
+    }
+
+    if (isSaved) {
+      await removeTrack(item.id, token);  // Usa el access token del usuario
+    } else {
+      await saveTrack(item.id, token);  // Usa el access token del usuario
+    }
+    setIsSaved(!isSaved);
+  };
+
+  const handleFollowArtist = async () => {
+    const token = await getUserAccessToken(); // Obtener access token del usuario
+    if (!token) {
+      console.error('No access token found');
+      return;
+    }
+
+    if (isFollowing) {
+      await unfollowArtist(item.id, token);  // Usa el access token del usuario
+    } else {
+      await followArtist(item.id, token);  // Usa el access token del usuario
+    }
+    setIsFollowing(!isFollowing);
+  };
+
   const renderHeader = () => (
     <Animated.View style={[styles.card, { opacity: fadeAnim }]}>
       <Image 
@@ -115,6 +153,13 @@ const DetailScreen = ({ route, navigation }) => {
           <Text style={styles.title}>{item.name}</Text>
           <Text style={styles.subtitle}>Followers: {item.followers.total.toLocaleString()}</Text>
           <Text style={styles.subtitle}>Genres: {item.genres.join(', ')}</Text>
+
+          {/* Botón para Seguir/Dejar de seguir artista */}
+          <TouchableOpacity onPress={handleFollowArtist} style={styles.button}>
+            <Text style={styles.buttonText}>
+              {isFollowing ? 'Unfollow Artist' : 'Follow Artist'}
+            </Text>
+          </TouchableOpacity>
         </>
       )}
       {item.type === 'album' && (
@@ -160,6 +205,13 @@ const DetailScreen = ({ route, navigation }) => {
               <Text style={styles.stopButtonText}>Stop</Text>
             </TouchableOpacity>
           )}
+
+          {/* Botón para Guardar/Quitar canciones */}
+          <TouchableOpacity onPress={handleSaveSong} style={styles.button}>
+            <Text style={styles.buttonText}>
+              {isSaved ? 'Remove from Library' : 'Save to Library'}
+            </Text>
+          </TouchableOpacity>
         </>
       )}
       {item.type === 'show' && (
@@ -301,6 +353,19 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   stopButtonText: {
+    fontSize: 16,
+    color: '#fff',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  button: {
+    marginTop: 15,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    backgroundColor: '#1DB954',
+    borderRadius: 8,
+  },
+  buttonText: {
     fontSize: 16,
     color: '#fff',
     fontWeight: 'bold',

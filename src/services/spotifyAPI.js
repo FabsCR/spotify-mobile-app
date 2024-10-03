@@ -129,58 +129,62 @@ export const getAlbumTracks = async (albumId) => {
   }
 };
 
-// **Nueva función**: Guardar una canción en la biblioteca del usuario
-export const saveSong = async (trackId, userToken) => {
+// Guardar una canción en la biblioteca del usuario
+export const saveTrack = async (trackId, token) => {
   try {
     const response = await axios.put(`https://api.spotify.com/v1/me/tracks?ids=${trackId}`, {}, {
       headers: {
-        Authorization: `Bearer ${userToken}`,
+        'Authorization': `Bearer ${token}`,
       },
     });
-    return response;
+    return response.data;
   } catch (error) {
     console.error('Error saving song:', error);
+    throw error;
   }
 };
 
-// **Nueva función**: Quitar una canción de la biblioteca del usuario
-export const removeSong = async (trackId, userToken) => {
+// Eliminar una canción de la biblioteca del usuario
+export const removeTrack = async (trackId, token) => {
   try {
     const response = await axios.delete(`https://api.spotify.com/v1/me/tracks?ids=${trackId}`, {
       headers: {
-        Authorization: `Bearer ${userToken}`,
+        'Authorization': `Bearer ${token}`,
       },
     });
-    return response;
+    return response.data;
   } catch (error) {
     console.error('Error removing song:', error);
+    throw error;
   }
 };
 
-// **Nueva función**: Seguir a un artista
-export const followArtist = async (artistId, userToken) => {
+// Seguir a un artista
+export const followArtist = async (artistId, token) => {
   try {
     const response = await axios.put(`https://api.spotify.com/v1/me/following?type=artist&ids=${artistId}`, {}, {
       headers: {
-        Authorization: `Bearer ${userToken}`,
-      },
+        'Authorization': `Bearer ${token}`,
+      }
     });
-    return response;
+    return response.data;
   } catch (error) {
     console.error('Error following artist:', error);
+    throw error;
   }
 };
 
-// **Nueva función**: Dejar de seguir a un artista
-export const unfollowArtist = async (artistId, userToken) => {
+// Dejar de seguir a un artista
+export const unfollowArtist = async (artistId, token) => {
   try {
     const response = await axios.delete(`https://api.spotify.com/v1/me/following?type=artist&ids=${artistId}`, {
       headers: {
-        Authorization: `Bearer ${userToken}`,
-      },
+        'Authorization': `Bearer ${token}`,
+      }
     });
-    return response;
+    return response.data;
   } catch (error) {
     console.error('Error unfollowing artist:', error);
+    throw error;
   }
 };
