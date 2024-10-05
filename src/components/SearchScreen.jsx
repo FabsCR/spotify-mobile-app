@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Dimensions, FlatList, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { searchAlbums, searchArtists, searchPodcasts, searchSongs } from '../services/spotifyAPI.js';
+import { getNewPodcasts, getNewReleases, getNewSongs, searchAlbums, searchArtists, searchPodcasts, searchSongs } from '../services/spotifyAPI.js';
 
 const { width } = Dimensions.get('window');
 
@@ -13,6 +13,12 @@ const SearchScreen = ({ navigation }) => {
     podcasts: []
   });
   const [loading, setLoading] = useState(false);
+  const [newSongs, setNewSongs] = useState([]);
+  const [newReleases, setNewReleases] = useState([]);
+  const [newPodcasts, setNewPodcasts] = useState([]);
+  const [offsetSongs, setOffsetSongs] = useState(0);
+  const [offsetReleases, setOffsetReleases] = useState(0);
+  const [offsetPodcasts, setOffsetPodcasts] = useState(0);
 
   const handleSearch = async () => {
     if (!query) return;
@@ -43,110 +49,241 @@ const SearchScreen = ({ navigation }) => {
     navigation.navigate('Details', { item });
   };
 
-  return (
-    <View style={styles.container}>
-      <TextInput
-        style={styles.input}
-        placeholder="Search for artists, albums, songs or podcasts"
-        value={query}
-        onChangeText={setQuery}
-        onSubmitEditing={handleSearch}
-      />
-      {loading ? (
-        <Text style={styles.loadingText}>Loading...</Text>
-      ) : (
-        query !== '' && (
+  const loadInitialData = async () => {
+    setLoading(true);
+    const songs = await getNewSongs(0);
+    const releases = await getNewReleases(0);
+    const podcasts = await getNewPodcasts(0);
+
+    setNewSongs(songs);
+    setNewReleases(releases);
+    setNewPodcasts(podcasts);
+    setLoading(false);
+  };
+
+
+  useEffect(() => {
+    loadInitialData();
+
+    const fetchNewContent = async () => {
+      setLoading(true);
+      try {
+        const [songs, releases, podcasts] = await Promise.all([
+          getNewSongs(),
+          getNewReleases(),
+          getNewPodcasts()
+        ]);
+        setNewSongs(songs);
+        setNewReleases(releases);
+        setNewPodcasts(podcasts);
+      } catch (error) {
+        console.error('Error fetching new content:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchNewContent();
+  }, []);
+
+    // Función para cargar más datos
+    const loadMoreData = async (type) => {
+      setLoading(true);
+      let songs, releases, podcasts;
+  
+      if (type === 'songs') {
+        songs = await getNewSongs(offsetSongs);
+        setNewSongs((prev) => [...prev, ...songs]);
+        setOffsetSongs((prev) => prev + 10);
+      } else if (type === 'releases') {
+        releases = await getNewReleases(offsetReleases);
+        setNewReleases((prev) => [...prev, ...releases]);
+        setOffsetReleases((prev) => prev + 10);
+      } else if (type === 'podcasts') {
+        podcasts = await getNewPodcasts(offsetPodcasts);
+        setNewPodcasts((prev) => [...prev, ...podcasts]);
+        setOffsetPodcasts((prev) => prev + 10);
+      }
+  
+      setLoading(false);
+    };
+
+    const handleScroll = (event, type) => {
+      const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+      const isEnd = layoutMeasurement.height + contentOffset.y >= contentSize.height - 20; // Margen de 20px
+  
+      if (isEnd && !loading) {
+        loadMoreData(type);
+      }
+    };
+
+
+    return (
+      <View style={styles.container}>
+        <TextInput
+          style={styles.input}
+          placeholder="Search for artists, albums, songs or podcasts"
+          value={query}
+          onChangeText={setQuery}
+          onSubmitEditing={handleSearch}
+        />
+        {loading ? (
+          <Text style={styles.loadingText}>Loading...</Text>
+        ) : (
           <ScrollView showsVerticalScrollIndicator={false}>
-            {/* Artistas */}
-            {results.artists.length > 0 && (
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Artists</Text>
-                <FlatList
-                  data={results.artists}
-                  horizontal
-                  keyExtractor={(item) => item.id}
-                  renderItem={({ item }) => (
-                    <TouchableOpacity onPress={() => handleNavigation(item)}>
-                      <View style={styles.resultContainer}>
-                        <Image source={{ uri: item.images?.[0]?.url || 'default-image-url.jpg' }} style={styles.resultImage} />
-                        <Text style={styles.resultName}>{item.name}</Text>
-                      </View>
-                    </TouchableOpacity>
-                  )}
-                  showsHorizontalScrollIndicator={false}
-                />
-              </View>
+            {query !== '' && (
+              <>
+                {results.artists.length > 0 && (
+                  <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>Artists</Text>
+                    <FlatList
+                      data={results.artists}
+                      keyExtractor={(item) => item.id}
+                      renderItem={({ item }) => (
+                        <TouchableOpacity onPress={() => handleNavigation(item)}>
+                          <View style={styles.resultContainer}>
+                            <Image source={{ uri: item.images?.[0]?.url || 'default-image-url.jpg' }} style={styles.resultImage} />
+                            <Text style={styles.resultName}>{item.name}</Text>
+                          </View>
+                        </TouchableOpacity>
+                      )}
+                      horizontal // Enable horizontal scrolling
+                      showsHorizontalScrollIndicator={false} // Hide horizontal scroll bar
+                    />
+                  </View>
+                )}
+                
+                {results.albums.length > 0 && (
+                  <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>Albums</Text>
+                    <FlatList
+                      data={results.albums}
+                      keyExtractor={(item) => item.id}
+                      renderItem={({ item }) => (
+                        <TouchableOpacity onPress={() => handleNavigation(item)}>
+                          <View style={styles.resultContainer}>
+                            <Image source={{ uri: item.images?.[0]?.url || 'default-image-url.jpg' }} style={styles.resultImage} />
+                            <Text style={styles.resultName}>{item.name}</Text>
+                          </View>
+                        </TouchableOpacity>
+                      )}
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                    />
+                  </View>
+                )}
+                
+                {results.songs.length > 0 && (
+                  <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>Songs</Text>
+                    <FlatList
+                      data={results.songs}
+                      keyExtractor={(item) => item.id}
+                      renderItem={({ item }) => (
+                        <TouchableOpacity onPress={() => handleNavigation(item)}>
+                          <View style={styles.resultContainer}>
+                            <Image source={{ uri: item.album.images?.[0]?.url || 'default-image-url.jpg' }} style={styles.resultImage} />
+                            <Text style={styles.resultName}>{item.name}</Text>
+                            <Text style={styles.resultSubtitle}>{item.artists.map(a => a.name).join(', ')}</Text>
+                          </View>
+                        </TouchableOpacity>
+                      )}
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                    />
+                  </View>
+                )}
+                
+                {results.podcasts.length > 0 && (
+                  <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>Podcasts</Text>
+                    <FlatList
+                      data={results.podcasts}
+                      keyExtractor={(item) => item.id}
+                      renderItem={({ item }) => (
+                        <TouchableOpacity onPress={() => handleNavigation(item)}>
+                          <View style={styles.resultContainer}>
+                            <Image source={{ uri: item.images?.[0]?.url || 'default-image-url.jpg' }} style={styles.resultImage} />
+                            <Text style={styles.resultName}>{item.name}</Text>
+                          </View>
+                        </TouchableOpacity>
+                      )}
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                    />
+                  </View>
+                )}
+              </>
             )}
 
-            {/* Álbumes */}
-            {results.albums.length > 0 && (
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Albums</Text>
-                <FlatList
-                  data={results.albums}
-                  horizontal
-                  keyExtractor={(item) => item.id}
-                  renderItem={({ item }) => (
-                    <TouchableOpacity onPress={() => handleNavigation(item)}>
-                      <View style={styles.resultContainer}>
-                        <Image source={{ uri: item.images?.[0]?.url || 'default-image-url.jpg' }} style={styles.resultImage} />
-                        <Text style={styles.resultName}>{item.name}</Text>
-                      </View>
-                    </TouchableOpacity>
-                  )}
-                  showsHorizontalScrollIndicator={false}
-                />
-              </View>
+          {newSongs.length > 0 && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Fyp</Text>
+          <FlatList
+            data={newSongs}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <TouchableOpacity onPress={() => handleNavigation(item)}>
+                <View style={styles.resultContainer}>
+                  <Image source={{ uri: item.images?.[0]?.url || 'default-image-url.jpg' }} style={styles.resultImage} />
+                  <Text style={styles.resultName}>{item.name}</Text>
+                </View>
+              </TouchableOpacity>
             )}
-
-            {/* Canciones */}
-            {results.songs.length > 0 && (
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Songs</Text>
-                <FlatList
-                  data={results.songs}
-                  horizontal
-                  keyExtractor={(item) => item.id}
-                  renderItem={({ item }) => (
-                    <TouchableOpacity onPress={() => handleNavigation(item)}>
-                      <View style={styles.resultContainer}>
-                        <Image source={{ uri: item.album.images?.[0]?.url || 'default-image-url.jpg' }} style={styles.resultImage} />
-                        <Text style={styles.resultName}>{item.name}</Text>
-                        <Text style={styles.resultSubtitle}>{item.artists.map(a => a.name).join(', ')}</Text>
-                      </View>
-                    </TouchableOpacity>
-                  )}
-                  showsHorizontalScrollIndicator={false}
-                />
-              </View>
-            )}
-
-            {/* Podcasts */}
-            {results.podcasts.length > 0 && (
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Podcasts</Text>
-                <FlatList
-                  data={results.podcasts}
-                  horizontal
-                  keyExtractor={(item) => item.id}
-                  renderItem={({ item }) => (
-                    <TouchableOpacity onPress={() => handleNavigation(item)}>
-                      <View style={styles.resultContainer}>
-                        <Image source={{ uri: item.images?.[0]?.url || 'default-image-url.jpg' }} style={styles.resultImage} />
-                        <Text style={styles.resultName}>{item.name}</Text>
-                      </View>
-                    </TouchableOpacity>
-                  )}
-                  showsHorizontalScrollIndicator={false}
-                />
-              </View>
-            )}
-          </ScrollView>
-        )
+            onScroll={(event) => handleScroll(event, 'songs')}
+            scrollEventThrottle={16} // Permite que el evento se dispare más frecuentemente
+            showsVerticalScrollIndicator={false}
+          />
+        </View>
       )}
-    </View>
-  );
+
+      {/* Sección de nuevos lanzamientos */}
+      {newReleases.length > 0 && (
+        <View style={styles.section}>
+          <FlatList
+            data={newReleases}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <TouchableOpacity onPress={() => handleNavigation(item)}>
+                <View style={styles.resultContainer}>
+                  <Image source={{ uri: item.images?.[0]?.url || 'default-image-url.jpg' }} style={styles.resultImage} />
+                  <Text style={styles.resultName}>{item.name}</Text>
+                </View>
+              </TouchableOpacity>
+            )}
+            onScroll={(event) => handleScroll(event, 'releases')}
+            scrollEventThrottle={16}
+            showsVerticalScrollIndicator={false}
+          />
+        </View>
+      )}
+
+      {/* Sección de nuevos podcasts */}
+      {newPodcasts.length > 0 && (
+        <View style={styles.section}>
+          <FlatList
+            data={newPodcasts}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <TouchableOpacity onPress={() => handleNavigation(item)}>
+                <View style={styles.resultContainer}>
+                  <Image source={{ uri: item.images?.[0]?.url || 'default-image-url.jpg' }} style={styles.resultImage} />
+                  <Text style={styles.resultName}>{item.name}</Text>
+                </View>
+              </TouchableOpacity>
+            )}
+            onScroll={(event) => handleScroll(event, 'podcasts')}
+            scrollEventThrottle={16}
+            showsVerticalScrollIndicator={false}
+          />
+        </View>
+      )}
+    </ScrollView>
+    )}
+  </View>
+    );
 };
+
 
 const styles = StyleSheet.create({
   container: {

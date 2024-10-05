@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, ActivityIndicator, Animated } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { Audio } from 'expo-av';
-import { getAlbumTracks, searchAlbums, searchSongs, saveTrack, removeTrack, followArtist, unfollowArtist } from '../services/spotifyAPI';
-import { SPOTIFY_ACCESS_TOKEN } from '@env';
 import * as SecureStore from 'expo-secure-store';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Animated, FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { followArtist, getAlbumTracks, removeTrack, saveTrack, searchAlbums, searchSongs, unfollowArtist } from '../services/spotifyAPI';
 
 const DetailScreen = ({ route, navigation }) => {
   const { item } = route.params;

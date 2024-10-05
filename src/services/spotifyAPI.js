@@ -25,6 +25,70 @@ export const getClientCredentialsToken = async () => {
   }
 };
 
+export const getNewSongs = async (offset = 0) => {
+  try {
+    const token = await getClientCredentialsToken();
+    const response = await axios.get('https://api.spotify.com/v1/browse/new-releases', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      params: {
+        type: 'track',
+        limit: 10, // Cambia el límite a 10 para la paginación
+        offset: offset, // Pasa el offset para la paginación
+      },
+    });
+
+    return response.data.albums.items; // Los lanzamientos de Spotify suelen ser álbumes
+  } catch (error) {
+    console.error('Error fetching new releases:', error);
+    return [];
+  }
+};
+
+export const getNewReleases = async (offset = 0) => {
+  try {
+    const token = await getClientCredentialsToken();
+    const response = await axios.get('https://api.spotify.com/v1/browse/new-releases', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      params: {
+        type: 'album',
+        limit: 10, // Cambia el límite a 10 para la paginación
+        offset: offset, // Pasa el offset para la paginación
+      },
+    });
+
+    return response.data.albums.items; // Los lanzamientos de Spotify suelen ser álbumes
+  } catch (error) {
+    console.error('Error fetching new releases:', error);
+    return [];
+  }
+};
+
+export const getNewPodcasts = async (offset = 0) => {
+  try {
+    const token = await getClientCredentialsToken();
+    const response = await axios.get('https://api.spotify.com/v1/shows', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      params: {
+        type: 'show',
+        limit: 10, // Cambia el límite a 10 para la paginación
+        offset: offset, // Pasa el offset para la paginación
+      },
+    });
+
+    return response.data.shows.items; // Obtenemos los podcasts más recientes
+  } catch (error) {
+    console.error('Error fetching new podcasts:', error);
+    return [];
+  }
+};
+
+
 // Función de búsqueda general reutilizando el token de Client Credentials
 export const searchArtists = async (query) => {
   if (!query) return [];
