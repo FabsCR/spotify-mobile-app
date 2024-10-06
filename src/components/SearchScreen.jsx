@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Dimensions, FlatList, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { getNewPodcasts, getNewReleases, getNewSongs, searchAlbums, searchArtists, searchPodcasts, searchSongs } from '../services/spotifyAPI.js';
+import { getNewReleases, searchAlbums, searchArtists, searchPodcasts, searchSongs } from '../services/spotifyAPI.js';
 
 const { width } = Dimensions.get('window');
 
@@ -13,12 +13,8 @@ const SearchScreen = ({ navigation }) => {
     podcasts: []
   });
   const [loading, setLoading] = useState(false);
-  const [newSongs, setNewSongs] = useState([]);
   const [newReleases, setNewReleases] = useState([]);
-  const [newPodcasts, setNewPodcasts] = useState([]);
-  const [offsetSongs, setOffsetSongs] = useState(0);
   const [offsetReleases, setOffsetReleases] = useState(0);
-  const [offsetPodcasts, setOffsetPodcasts] = useState(0);
 
   const handleSearch = async () => {
     if (!query) return;
@@ -51,13 +47,9 @@ const SearchScreen = ({ navigation }) => {
 
   const loadInitialData = async () => {
     setLoading(true);
-    const songs = await getNewSongs(0);
     const releases = await getNewReleases(0);
-    const podcasts = await getNewPodcasts(0);
 
-    setNewSongs(songs);
     setNewReleases(releases);
-    setNewPodcasts(podcasts);
     setLoading(false);
   };
 
@@ -68,14 +60,10 @@ const SearchScreen = ({ navigation }) => {
     const fetchNewContent = async () => {
       setLoading(true);
       try {
-        const [songs, releases, podcasts] = await Promise.all([
-          getNewSongs(),
+        const [ releases ] = await Promise.all([
           getNewReleases(),
-          getNewPodcasts()
         ]);
-        setNewSongs(songs);
         setNewReleases(releases);
-        setNewPodcasts(podcasts);
       } catch (error) {
         console.error('Error fetching new content:', error);
       } finally {
@@ -89,22 +77,13 @@ const SearchScreen = ({ navigation }) => {
     // Función para cargar más datos
     const loadMoreData = async (type) => {
       setLoading(true);
-      let songs, releases, podcasts;
+      let releases;
   
-      if (type === 'songs') {
-        songs = await getNewSongs(offsetSongs);
-        setNewSongs((prev) => [...prev, ...songs]);
-        setOffsetSongs((prev) => prev + 10);
-      } else if (type === 'releases') {
+    if (type === 'releases') {
         releases = await getNewReleases(offsetReleases);
         setNewReleases((prev) => [...prev, ...releases]);
         setOffsetReleases((prev) => prev + 10);
-      } else if (type === 'podcasts') {
-        podcasts = await getNewPodcasts(offsetPodcasts);
-        setNewPodcasts((prev) => [...prev, ...podcasts]);
-        setOffsetPodcasts((prev) => prev + 10);
-      }
-  
+      } 
       setLoading(false);
     };
 
@@ -214,34 +193,12 @@ const SearchScreen = ({ navigation }) => {
                 )}
               </>
             )}
-  
-          {newSongs.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>New Songs</Text>
-            <FlatList
-              data={newSongs}
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
-                <TouchableOpacity onPress={() => handleNavigation(item)}>
-                  <View style={styles.centeredResultContainer}>
-                    <Image source={{ uri: item.images?.[0]?.url || 'default-image-url.jpg' }} style={styles.centeredResultImage} />
-                    <Text style={styles.resultName}>{item.name}</Text>
-                  </View>
-                </TouchableOpacity>
-              )}
-              numColumns={1} // Aseguramos que solo se muestre 1 elemento por fila
-              onScroll={(event) => handleScroll(event, 'songs')}
-              scrollEventThrottle={16}
-              showsVerticalScrollIndicator={false}
-            />
-          </View>
-        )}
 
         {/* Repetimos lo mismo para los otros resultados nuevos */}
         {/* Sección de nuevos lanzamientos - New Releases */}
         {newReleases.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>New Releases</Text>
+            <Text style={styles.sectionTitle}>Fyp</Text>
             <FlatList
               data={newReleases}
               keyExtractor={(item) => item.id}
@@ -261,28 +218,6 @@ const SearchScreen = ({ navigation }) => {
           </View>
         )}
 
-        {/* Sección de nuevos podcasts - New Podcasts */}
-        {newPodcasts.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>New Podcasts</Text>
-            <FlatList
-              data={newPodcasts}
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
-                <TouchableOpacity onPress={() => handleNavigation(item)}>
-                  <View style={styles.centeredResultContainer}>
-                    <Image source={{ uri: item.images?.[0]?.url || 'default-image-url.jpg' }} style={styles.centeredResultImage} />
-                    <Text style={styles.resultName}>{item.name}</Text>
-                  </View>
-                </TouchableOpacity>
-              )}
-              numColumns={1} // Aseguramos que solo se muestre 1 elemento por fila
-              onScroll={(event) => handleScroll(event, 'podcasts')}
-              scrollEventThrottle={16}
-              showsVerticalScrollIndicator={false}
-                />
-              </View>
-            )}
           </ScrollView>
         )}
       </View>
