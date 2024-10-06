@@ -116,8 +116,7 @@ const SearchScreen = ({ navigation }) => {
         loadMoreData(type);
       }
     };
-
-
+    
     return (
       <View style={styles.container}>
         <TextInput
@@ -152,7 +151,7 @@ const SearchScreen = ({ navigation }) => {
                     />
                   </View>
                 )}
-                
+  
                 {results.albums.length > 0 && (
                   <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Albums</Text>
@@ -172,7 +171,7 @@ const SearchScreen = ({ navigation }) => {
                     />
                   </View>
                 )}
-                
+  
                 {results.songs.length > 0 && (
                   <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Songs</Text>
@@ -193,7 +192,7 @@ const SearchScreen = ({ navigation }) => {
                     />
                   </View>
                 )}
-                
+  
                 {results.podcasts.length > 0 && (
                   <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Podcasts</Text>
@@ -215,127 +214,146 @@ const SearchScreen = ({ navigation }) => {
                 )}
               </>
             )}
-
+  
           {newSongs.length > 0 && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Fyp</Text>
-          <FlatList
-            data={newSongs}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <TouchableOpacity onPress={() => handleNavigation(item)}>
-                <View style={styles.resultContainer}>
-                  <Image source={{ uri: item.images?.[0]?.url || 'default-image-url.jpg' }} style={styles.resultImage} />
-                  <Text style={styles.resultName}>{item.name}</Text>
-                </View>
-              </TouchableOpacity>
-            )}
-            onScroll={(event) => handleScroll(event, 'songs')}
-            scrollEventThrottle={16} // Permite que el evento se dispare más frecuentemente
-            showsVerticalScrollIndicator={false}
-          />
-        </View>
-      )}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>New Songs</Text>
+            <FlatList
+              data={newSongs}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <TouchableOpacity onPress={() => handleNavigation(item)}>
+                  <View style={styles.centeredResultContainer}>
+                    <Image source={{ uri: item.images?.[0]?.url || 'default-image-url.jpg' }} style={styles.centeredResultImage} />
+                    <Text style={styles.resultName}>{item.name}</Text>
+                  </View>
+                </TouchableOpacity>
+              )}
+              numColumns={1} // Aseguramos que solo se muestre 1 elemento por fila
+              onScroll={(event) => handleScroll(event, 'songs')}
+              scrollEventThrottle={16}
+              showsVerticalScrollIndicator={false}
+            />
+          </View>
+        )}
 
-      {/* Sección de nuevos lanzamientos */}
-      {newReleases.length > 0 && (
-        <View style={styles.section}>
-          <FlatList
-            data={newReleases}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <TouchableOpacity onPress={() => handleNavigation(item)}>
-                <View style={styles.resultContainer}>
-                  <Image source={{ uri: item.images?.[0]?.url || 'default-image-url.jpg' }} style={styles.resultImage} />
-                  <Text style={styles.resultName}>{item.name}</Text>
-                </View>
-              </TouchableOpacity>
-            )}
-            onScroll={(event) => handleScroll(event, 'releases')}
-            scrollEventThrottle={16}
-            showsVerticalScrollIndicator={false}
-          />
-        </View>
-      )}
+        {/* Repetimos lo mismo para los otros resultados nuevos */}
+        {/* Sección de nuevos lanzamientos - New Releases */}
+        {newReleases.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>New Releases</Text>
+            <FlatList
+              data={newReleases}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <TouchableOpacity onPress={() => handleNavigation(item)}>
+                  <View style={styles.centeredResultContainer}>
+                    <Image source={{ uri: item.images?.[0]?.url || 'default-image-url.jpg' }} style={styles.centeredResultImage} />
+                    <Text style={styles.resultName}>{item.name}</Text>
+                  </View>
+                </TouchableOpacity>
+              )}
+              numColumns={1} // Aseguramos que solo se muestre 1 elemento por fila
+              onScroll={(event) => handleScroll(event, 'releases')}
+              scrollEventThrottle={16}
+              showsVerticalScrollIndicator={false}
+            />
+          </View>
+        )}
 
-      {/* Sección de nuevos podcasts */}
-      {newPodcasts.length > 0 && (
-        <View style={styles.section}>
-          <FlatList
-            data={newPodcasts}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <TouchableOpacity onPress={() => handleNavigation(item)}>
-                <View style={styles.resultContainer}>
-                  <Image source={{ uri: item.images?.[0]?.url || 'default-image-url.jpg' }} style={styles.resultImage} />
-                  <Text style={styles.resultName}>{item.name}</Text>
-                </View>
-              </TouchableOpacity>
+        {/* Sección de nuevos podcasts - New Podcasts */}
+        {newPodcasts.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>New Podcasts</Text>
+            <FlatList
+              data={newPodcasts}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <TouchableOpacity onPress={() => handleNavigation(item)}>
+                  <View style={styles.centeredResultContainer}>
+                    <Image source={{ uri: item.images?.[0]?.url || 'default-image-url.jpg' }} style={styles.centeredResultImage} />
+                    <Text style={styles.resultName}>{item.name}</Text>
+                  </View>
+                </TouchableOpacity>
+              )}
+              numColumns={1} // Aseguramos que solo se muestre 1 elemento por fila
+              onScroll={(event) => handleScroll(event, 'podcasts')}
+              scrollEventThrottle={16}
+              showsVerticalScrollIndicator={false}
+                />
+              </View>
             )}
-            onScroll={(event) => handleScroll(event, 'podcasts')}
-            scrollEventThrottle={16}
-            showsVerticalScrollIndicator={false}
-          />
-        </View>
-      )}
-    </ScrollView>
-    )}
-  </View>
+          </ScrollView>
+        )}
+      </View>
     );
-};
-
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: '#121212',
-  },
-  input: {
-    height: 40,
-    borderColor: '#fff',
-    borderWidth: 1,
-    marginBottom: 20,
-    paddingHorizontal: 10,
-    borderRadius: 5,
-    color: '#fff',
-    backgroundColor: '#333',
-  },
-  loadingText: {
-    fontSize: 18,
-    color: '#888',
-    textAlign: 'center',
-  },
-  section: {
-    marginBottom: 30,
-  },
-  sectionTitle: {
-    fontSize: 22,
-    color: '#fff',
-    marginBottom: 10,
-    fontWeight: 'bold',
-  },
-  resultContainer: {
-    width: width * 0.3,
-    marginRight: 15,
-    alignItems: 'center',
-  },
-  resultImage: {
-    width: width * 0.25,
-    height: width * 0.25,
-    borderRadius: 10,
-    marginBottom: 10,
-  },
-  resultName: {
-    fontSize: 16,
-    color: '#fff',
-    textAlign: 'center',
-  },
-  resultSubtitle: {
-    fontSize: 14,
-    color: '#888',
-    textAlign: 'center',
-  },
-});
-
-export default SearchScreen;
+  };
+  
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      padding: 20,
+      backgroundColor: '#121212',
+    },
+    input: {
+      height: 40,
+      borderColor: '#fff',
+      borderWidth: 1,
+      marginBottom: 20,
+      paddingHorizontal: 10,
+      borderRadius: 5,
+      color: '#fff',
+      backgroundColor: '#333',
+    },
+    loadingText: {
+      fontSize: 18,
+      color: '#888',
+      textAlign: 'center',
+    },
+    section: {
+      marginBottom: 30,
+    },
+    sectionTitle: {
+      fontSize: 22,
+      color: '#fff',
+      marginBottom: 10,
+      fontWeight: 'bold',
+    },
+    resultContainer: {
+      width: width * 0.3,
+      marginRight: 15,
+      alignItems: 'center',
+    },
+    resultImage: {
+      width: width * 0.25,
+      height: width * 0.25,
+      borderRadius: 10,
+      marginBottom: 10,
+    },
+    centeredResultContainer: {
+      width: width * 0.9, // Aumenta el ancho para centrar mejor
+      marginRight: 20,
+      alignItems: 'center',
+      justifyContent: 'center',
+      alignSelf: 'center', // Centramos el contenedor en la pantalla
+      padding: 10,
+    },
+    resultName: {
+      fontSize: 16,
+      color: '#fff',
+      textAlign: 'center',
+    },
+    resultSubtitle: {
+      fontSize: 14,
+      color: '#888',
+      textAlign: 'center',
+    },
+    centeredResultImage: {
+      width: width * 0.6, // Aumentamos el tamaño de la imagen
+      height: width * 0.6, // Para que la imagen esté más centrada
+      borderRadius: 10,
+      marginBottom: 10,
+    },
+  });
+  
+  export default SearchScreen;
