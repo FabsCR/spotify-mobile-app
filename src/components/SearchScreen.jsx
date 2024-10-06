@@ -197,26 +197,30 @@ const SearchScreen = ({ navigation }) => {
         {/* Repetimos lo mismo para los otros resultados nuevos */}
         {/* Sección de nuevos lanzamientos - New Releases */}
         {newReleases.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Fyp</Text>
-            <FlatList
-              data={newReleases}
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
-                <TouchableOpacity onPress={() => handleNavigation(item)}>
-                  <View style={styles.centeredResultContainer}>
-                    <Image source={{ uri: item.images?.[0]?.url || 'default-image-url.jpg' }} style={styles.centeredResultImage} />
-                    <Text style={styles.resultName}>{item.name}</Text>
-                  </View>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Top 50 Global</Text>
+          <FlatList
+            data={newReleases}
+            keyExtractor={(item) => item.track.id} // Los items de la playlist tienen una estructura diferente, el ID está en 'track'
+            renderItem={({ item }) => (
+              <View style={styles.centeredResultContainer}>
+                <TouchableOpacity onPress={() => handleNavigation(item.track)}>
+                  <Image 
+                    source={{ uri: item.track.album.images?.[0]?.url || 'default-image-url.jpg' }} 
+                    style={styles.centeredResultImage} 
+                  />
+                  <Text style={styles.resultName}>{item.track.name}</Text>
+                  <Text style={styles.resultSubtitle}>{item.track.artists.map(a => a.name).join(', ')}</Text>
                 </TouchableOpacity>
-              )}
-              numColumns={1} // Aseguramos que solo se muestre 1 elemento por fila
-              onScroll={(event) => handleScroll(event, 'releases')}
-              scrollEventThrottle={16}
-              showsVerticalScrollIndicator={false}
-            />
-          </View>
-        )}
+              </View>
+            )}
+            numColumns={1} // Aseguramos que solo se muestre 1 elemento por fila
+            onScroll={(event) => handleScroll(event, 'top50')}
+            scrollEventThrottle={16}
+            showsVerticalScrollIndicator={false}
+          />
+        </View>
+      )}
 
           </ScrollView>
         )}

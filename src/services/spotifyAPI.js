@@ -26,23 +26,21 @@ export const getClientCredentialsToken = async () => {
 };
 
 
-export const getNewReleases = async (offset = 0) => {
+export const getNewReleases = async () => {
   try {
     const token = await getClientCredentialsToken();
-    const response = await axios.get('https://api.spotify.com/v1/browse/new-releases', {
+    const response = await axios.get('https://api.spotify.com/v1/playlists/37i9dQZEVXbMDoHDwVN2tF/tracks', {
       headers: {
         'Authorization': `Bearer ${token}`,
       },
       params: {
-        type: 'album',
-        limit: 50, // Cambia el límite a 10 para la paginación
-        offset: offset, // Pasa el offset para la paginación
+        limit: 50, // Puedes ajustar el límite si deseas menos canciones
       },
     });
 
-    return response.data.albums.items; // Los lanzamientos de Spotify suelen ser álbumes
+    return response.data.items; // Los elementos de la playlist (canciones)
   } catch (error) {
-    console.error('Error fetching new releases:', error);
+    console.error('Error fetching Top 50 Global:', error);
     return [];
   }
 };
