@@ -1,9 +1,46 @@
 import Slider from '@react-native-community/slider';
 import { Audio } from 'expo-av';
 import * as SecureStore from 'expo-secure-store';
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { ActivityIndicator, Animated, FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { LanguageContext } from '../context/LanguageContext';
 import { followArtist, getAlbumTracks, removeTrack, saveTrack, searchAlbums, searchSongs, unfollowArtist } from '../services/spotifyAPI';
+
+const translations = {
+  en: {
+    followArtist: 'Follow Artist',
+    unfollowArtist: 'Unfollow Artist',
+    saveToLibrary: 'Save to Library',
+    removeFromLibrary: 'Remove from Library',
+    playPreview: 'Play Preview',
+    stop: 'Stop',
+    loading: 'Loading...',
+    duration: 'Duration',
+    popularity: 'Popularity',
+    releaseDate: 'Release Date',
+    totalTracks: 'Total Tracks',
+    followers: 'Followers',
+    genres: 'Genres',
+    publisher: 'Publisher',
+  },
+  es: {
+    followArtist: 'Seguir Artista',
+    unfollowArtist: 'Dejar de Seguir Artista',
+    saveToLibrary: 'Guardar en Biblioteca',
+    removeFromLibrary: 'Eliminar de Biblioteca',
+    playPreview: 'Reproducir Vista Previa',
+    stop: 'Detener',
+    loading: 'Cargando...',
+    duration: 'Duración',
+    popularity: 'Popularidad',
+    releaseDate: 'Fecha de Lanzamiento',
+    totalTracks: 'Total de Canciones',
+    followers: 'Seguidores',
+    genres: 'Géneros',
+    publisher: 'Editor',
+  },
+};
+
 
 const DetailScreen = ({ route, navigation }) => {
   const { item } = route.params;
@@ -18,6 +55,7 @@ const DetailScreen = ({ route, navigation }) => {
   const fadeAnim = useState(new Animated.Value(0))[0];
   const [isSaved, setIsSaved] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
+  const { language, toggleLanguage } = useContext(LanguageContext);
 
   useEffect(() => {
     setLoading(true);
@@ -150,13 +188,17 @@ const DetailScreen = ({ route, navigation }) => {
       {item.type === 'artist' && (
         <>
           <Text style={styles.title}>{item.name}</Text>
-          <Text style={styles.subtitle}>Followers: {item.followers.total.toLocaleString()}</Text>
-          <Text style={styles.subtitle}>Genres: {item.genres.join(', ')}</Text>
-
+          <Text style={styles.subtitle}>
+            {translations[language].followers}: {item.followers.total.toLocaleString()}
+          </Text>
+          <Text style={styles.subtitle}>
+            {translations[language].genres}: {item.genres.join(', ')}
+          </Text>
+  
           {/* Botón para Seguir/Dejar de seguir artista */}
           <TouchableOpacity onPress={handleFollowArtist} style={styles.button}>
             <Text style={styles.buttonText}>
-              {isFollowing ? 'Unfollow Artist' : 'Follow Artist'}
+              {isFollowing ? translations[language].unfollowArtist : translations[language].followArtist}
             </Text>
           </TouchableOpacity>
         </>
@@ -164,18 +206,24 @@ const DetailScreen = ({ route, navigation }) => {
       {item.type === 'album' && (
         <>
           <Text style={styles.title}>{item.name}</Text>
-          <Text style={styles.subtitle}>Release Date: {item.release_date}</Text>
-          <Text style={styles.subtitle}>Total Tracks: {item.total_tracks}</Text>
+          <Text style={styles.subtitle}>
+            {translations[language].releaseDate}: {item.release_date}
+          </Text>
+          <Text style={styles.subtitle}>
+            {translations[language].totalTracks}: {item.total_tracks}
+          </Text>
         </>
       )}
       {item.type === 'track' && (
         <>
           <Text style={styles.title}>{item.name}</Text>
           <Text style={styles.subtitle}>
-            Duration: {Math.floor(item.duration_ms / 60000)}:{Math.floor((item.duration_ms % 60000) / 1000)}
+            {translations[language].duration}: {Math.floor(item.duration_ms / 60000)}:{Math.floor((item.duration_ms % 60000) / 1000)}
           </Text>
-          <Text style={styles.subtitle}>Popularity: {item.popularity}</Text>
-
+          <Text style={styles.subtitle}>
+            {translations[language].popularity}: {item.popularity}
+          </Text>
+  
           {/* Barra de Progreso */}
           <Slider
             style={styles.slider}
@@ -190,25 +238,25 @@ const DetailScreen = ({ route, navigation }) => {
             {Math.floor(progress / 60000)}:{('0' + Math.floor((progress % 60000) / 1000)).slice(-2)} / 
             {Math.floor(duration / 60000)}:{('0' + Math.floor((duration % 60000) / 1000)).slice(-2)}
           </Text>
-
+  
           {/* Botón Play */}
           {item.preview_url && !isPlaying && (
             <TouchableOpacity style={styles.playButton} onPress={handleListenPreview}>
-              <Text style={styles.playButtonText}>Play Preview</Text>
+              <Text style={styles.playButtonText}>{translations[language].playPreview}</Text>
             </TouchableOpacity>
           )}
-
+  
           {/* Botón Stop */}
           {isPlaying && (
             <TouchableOpacity style={styles.stopButton} onPress={handleStopSound}>
-              <Text style={styles.stopButtonText}>Stop</Text>
+              <Text style={styles.stopButtonText}>{translations[language].stop}</Text>
             </TouchableOpacity>
           )}
-
+  
           {/* Botón para Guardar/Quitar canciones */}
           <TouchableOpacity onPress={handleSaveSong} style={styles.button}>
             <Text style={styles.buttonText}>
-              {isSaved ? 'Remove from Library' : 'Save to Library'}
+              {isSaved ? translations[language].removeFromLibrary : translations[language].saveToLibrary}
             </Text>
           </TouchableOpacity>
         </>
@@ -216,13 +264,13 @@ const DetailScreen = ({ route, navigation }) => {
       {item.type === 'show' && (
         <>
           <Text style={styles.title}>{item.name}</Text>
-          <Text style={styles.subtitle}>Publisher: {item.publisher}</Text>
+          <Text style={styles.subtitle}>{translations[language].publisher}: {item.publisher}</Text>
           <Text style={styles.description}>{item.description}</Text>
         </>
       )}
     </Animated.View>
   );
-
+  
   const renderAlbums = ({ item: album }) => (
     <TouchableOpacity onPress={() => navigation.navigate('Details', { item: album })}>
       <View style={styles.albumContainer}>

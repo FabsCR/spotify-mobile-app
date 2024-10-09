@@ -1,10 +1,32 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { Dimensions, FlatList, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { LanguageContext } from '../context/LanguageContext';
 import { getNewReleases, searchAlbums, searchArtists, searchPodcasts, searchSongs } from '../services/spotifyAPI.js';
 
 const { width } = Dimensions.get('window');
 
+const translations = {
+  en: {
+    searchPlaceholder: 'Search for artists, albums, songs or podcasts',
+    loading: 'Loading...',
+    artists: 'Artists',
+    albums: 'Albums',
+    songs: 'Songs',
+    podcasts: 'Podcasts',
+  },
+  es: {
+    searchPlaceholder: 'Buscar artistas, álbumes, canciones o podcasts',
+    loading: 'Cargando...',
+    artists: 'Artistas',
+    albums: 'Álbumes',
+    songs: 'Canciones',
+    podcasts: 'Podcasts',
+  },
+};
+
+
 const SearchScreen = ({ navigation }) => {
+  const { language } = useContext(LanguageContext);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState({
     artists: [],
@@ -13,6 +35,7 @@ const SearchScreen = ({ navigation }) => {
     podcasts: []
   });
   const [loading, setLoading] = useState(false);
+  const t = translations[language];
   const [newReleases, setNewReleases] = useState([]);
   const [offsetReleases, setOffsetReleases] = useState(0);
 
@@ -100,20 +123,25 @@ const SearchScreen = ({ navigation }) => {
       <View style={styles.container}>
         <TextInput
           style={styles.input}
-          placeholder="Search for artists, albums, songs or podcasts"
+          placeholder={language === 'en' ? 'Search for artists, albums, songs or podcasts' : 'Busca artistas, álbumes, canciones o podcasts'}
           value={query}
           onChangeText={setQuery}
           onSubmitEditing={handleSearch}
         />
         {loading ? (
-          <Text style={styles.loadingText}>Loading...</Text>
+          <Text style={styles.loadingText}>
+            {language === 'en' ? 'Loading...' : 'Cargando...'}
+          </Text>
         ) : (
           <ScrollView showsVerticalScrollIndicator={false}>
             {query !== '' && (
               <>
+                {/* Aquí van tus secciones de resultados de búsqueda */}
                 {results.artists.length > 0 && (
                   <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Artists</Text>
+                    <Text style={styles.sectionTitle}>
+                      {language === 'en' ? 'Artists' : 'Artistas'}
+                    </Text>
                     <FlatList
                       data={results.artists}
                       keyExtractor={(item) => item.id}
@@ -126,14 +154,16 @@ const SearchScreen = ({ navigation }) => {
                         </TouchableOpacity>
                       )}
                       horizontal // Enable horizontal scrolling
-                      showsHorizontalScrollIndicator={false} // Hide horizontal scroll bar
+                      showsHorizontalScrollIndicator={false}
                     />
                   </View>
                 )}
-  
+    
                 {results.albums.length > 0 && (
                   <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Albums</Text>
+                    <Text style={styles.sectionTitle}>
+                      {language === 'en' ? 'Albums' : 'Álbumes'}
+                    </Text>
                     <FlatList
                       data={results.albums}
                       keyExtractor={(item) => item.id}
@@ -150,10 +180,12 @@ const SearchScreen = ({ navigation }) => {
                     />
                   </View>
                 )}
-  
+    
                 {results.songs.length > 0 && (
                   <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Songs</Text>
+                    <Text style={styles.sectionTitle}>
+                      {language === 'en' ? 'Songs' : 'Canciones'}
+                    </Text>
                     <FlatList
                       data={results.songs}
                       keyExtractor={(item) => item.id}
@@ -171,10 +203,12 @@ const SearchScreen = ({ navigation }) => {
                     />
                   </View>
                 )}
-  
+    
                 {results.podcasts.length > 0 && (
                   <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Podcasts</Text>
+                    <Text style={styles.sectionTitle}>
+                      {language === 'en' ? 'Podcasts' : 'Podcasts'}
+                    </Text>
                     <FlatList
                       data={results.podcasts}
                       keyExtractor={(item) => item.id}
@@ -193,41 +227,39 @@ const SearchScreen = ({ navigation }) => {
                 )}
               </>
             )}
-
-        {/* Repetimos lo mismo para los otros resultados nuevos */}
-        {/* Sección de nuevos lanzamientos - New Releases */}
-        {newReleases.length > 0 && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Top 50 Global</Text>
-          <FlatList
-            data={newReleases}
-            keyExtractor={(item) => item.track.id} // Los items de la playlist tienen una estructura diferente, el ID está en 'track'
-            renderItem={({ item }) => (
-              <View style={styles.centeredResultContainer}>
-                <TouchableOpacity onPress={() => handleNavigation(item.track)}>
-                  <Image 
-                    source={{ uri: item.track.album.images?.[0]?.url || 'default-image-url.jpg' }} 
-                    style={styles.centeredResultImage} 
-                  />
-                  <Text style={styles.resultName}>{item.track.name}</Text>
-                  <Text style={styles.resultSubtitle}>{item.track.artists.map(a => a.name).join(', ')}</Text>
-                </TouchableOpacity>
+    
+            {/* Mostrar Top 50 Global solo si no hay consulta */}
+            {query === '' && newReleases.length > 0 && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Top 50 Global</Text>
+                <FlatList
+                  data={newReleases}
+                  keyExtractor={(item) => item.track.id} // Los items de la playlist tienen una estructura diferente, el ID está en 'track'
+                  renderItem={({ item }) => (
+                    <View style={styles.centeredResultContainer}>
+                      <TouchableOpacity onPress={() => handleNavigation(item.track)}>
+                        <Image 
+                          source={{ uri: item.track.album.images?.[0]?.url || 'default-image-url.jpg' }} 
+                          style={styles.centeredResultImage} 
+                        />
+                        <Text style={styles.resultName}>{item.track.name}</Text>
+                        <Text style={styles.resultSubtitle}>{item.track.artists.map(a => a.name).join(', ')}</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                  numColumns={1} // Aseguramos que solo se muestre 1 elemento por fila
+                  onScroll={(event) => handleScroll(event, 'top50')}
+                  scrollEventThrottle={16}
+                  showsVerticalScrollIndicator={false}
+                />
               </View>
             )}
-            numColumns={1} // Aseguramos que solo se muestre 1 elemento por fila
-            onScroll={(event) => handleScroll(event, 'top50')}
-            scrollEventThrottle={16}
-            showsVerticalScrollIndicator={false}
-          />
-        </View>
-      )}
-
           </ScrollView>
         )}
       </View>
     );
-  };
-  
+  }
+    
   const styles = StyleSheet.create({
     container: {
       flex: 1,
