@@ -1,8 +1,9 @@
 import { SPOTIFY_AUTH_ENDPOINT, SPOTIFY_CLIENT_ID, SPOTIFY_REDIRECT_URI_MOBILE, SPOTIFY_REDIRECT_URI_WEB, SPOTIFY_RESPONSE_TYPE, SPOTIFY_SCOPE } from '@env';
 import { useNavigation } from '@react-navigation/native';
 import * as SecureStore from 'expo-secure-store';
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { Linking, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { LanguageContext } from '../context/LanguageContext';
 
 // URI de redirección dinámica según el entorno
 const REDIRECT_URI = Platform.OS === 'web'
@@ -13,6 +14,8 @@ const LoginScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const navigation = useNavigation();
   const [authToken, setAuthToken] = useState(null);
+  const { language } = useContext(LanguageContext);
+
 
   // Comprobar si hay un token guardado en el almacenamiento seguro o localStorage
   useEffect(() => {
@@ -104,10 +107,14 @@ const LoginScreen = () => {
     <View style={styles.container}>
       <Text style={styles.title}>SpotyTEC</Text>
       <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-        <Text style={styles.loginText}>Authorize with Spotify</Text>
+        <Text style={styles.loginText}>             
+          {language === 'en' ? 'Authorize with Spotify' : 'Autorización con Spotify'}
+      </Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.aboutButton} onPress={() => setModalVisible(true)}>
-        <Text style={styles.aboutText}>About Us</Text>
+        <Text style={styles.aboutText}>                
+          {language === 'en' ? 'About us' : 'Sobre nosotros'}
+        </Text>
       </TouchableOpacity>
 
       {/* Modal para About Us */}
@@ -120,12 +127,16 @@ const LoginScreen = () => {
         <View style={styles.modalBackground}>
           <View style={styles.modalContainer}>
             <ScrollView contentContainerStyle={styles.modalContent}>
-              <Text style={styles.modalTitle}>About Us</Text>
+              <Text style={styles.modalTitle}>          
+                {language === 'en' ? 'About us' : 'Sobre nosotros'}
+              </Text>
               <Text style={styles.modalText}>
-                SpotyTEC es una app diseñada para ayudarte a buscar contenido en Spotify. Con SpotyTEC, puedes encontrar canciones, álbumes, artistas y podcasts usando la API de Spotify.
+              {language === 'en' ? 'SpotyTEC is an app designed to help you search for content on Spotify. With SpotyTEC, you can find songs, albums, artists, and podcasts using the Spotify API.' : 'SpotyTEC es una app diseñada para ayudarte a buscar contenido en Spotify. Con SpotyTEC, puedes encontrar canciones, álbumes, artistas y podcasts usando la API de Spotify.'}
               </Text>
               <View style={styles.footer}>
-                <Text style={styles.footerTitle}>Developers:</Text>
+                <Text style={styles.footerTitle}>                
+                  {language === 'en' ? 'Developers' : 'Desarrolladores'}
+                </Text>
                 <TouchableOpacity onPress={() => openLink('https://github.com/FabsCR')}>
                   <Text style={styles.footerLink}>Fabian Fernandez</Text>
                 </TouchableOpacity>
@@ -138,7 +149,9 @@ const LoginScreen = () => {
               </View>
             </ScrollView>
             <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
-              <Text style={styles.closeButtonText}>Cerrar</Text>
+              <Text style={styles.closeButtonText}>                
+                {language === 'en' ? 'Close' : 'Cerrar'}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>

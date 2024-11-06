@@ -1,6 +1,8 @@
 import { SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET } from '@env';
 import axios from 'axios';
 import { Buffer } from 'buffer';
+import { useContext } from 'react';
+import { LanguageContext } from '../context/LanguageContext';
 
 // Client Credentials para obtener token de acceso
 export const getClientCredentialsToken = async () => {
@@ -19,8 +21,29 @@ export const getClientCredentialsToken = async () => {
 
     return response.data.access_token;
   } catch (error) {
-    console.error('Error obtaining access token:', error);
+    const { translate } = useContext(LanguageContext); // Acceder al contexto
+    console.error(translate('errorObtainingToken'), error); // Usar la traducción
     throw error;
+  }
+};
+
+export const getNewReleases = async () => {
+  try {
+    const token = await getClientCredentialsToken();
+    const response = await axios.get('https://api.spotify.com/v1/playlists/37i9dQZEVXbMDoHDwVN2tF/tracks', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      params: {
+        limit: 50,
+      },
+    });
+
+    return response.data.items; // Los elementos de la playlist (canciones)
+  } catch (error) {
+    const { translate } = useContext(LanguageContext); // Acceder al contexto
+    console.error(translate('errorFetchingTop50Global'), error); // Usar la traducción
+    return [];
   }
 };
 
@@ -43,11 +66,13 @@ export const searchArtists = async (query) => {
 
     return response.data.artists.items;
   } catch (error) {
-    console.error('Error searching for artists:', error);
+    const { translate } = useContext(LanguageContext); // Acceder al contexto
+    console.error(translate('errorSearchingArtists'), error); // Usar la traducción
     return [];
   }
 };
 
+// Implementa las traducciones en las demás funciones de búsqueda
 export const searchAlbums = async (query) => {
   try {
     const token = await getClientCredentialsToken();
@@ -64,7 +89,8 @@ export const searchAlbums = async (query) => {
 
     return response.data.albums.items;
   } catch (error) {
-    console.error('Error searching for albums:', error);
+    const { translate } = useContext(LanguageContext); // Acceder al contexto
+    console.error(translate('errorSearchingAlbums'), error); // Usar la traducción
     throw error;
   }
 };
@@ -86,7 +112,8 @@ export const searchPodcasts = async (query) => {
 
     return response.data.shows.items;
   } catch (error) {
-    console.error('Error searching for podcasts:', error);
+    const { translate } = useContext(LanguageContext); // Acceder al contexto
+    console.error(translate('errorSearchingPodcasts'), error); // Usar la traducción
     throw error;
   }
 };
@@ -108,7 +135,8 @@ export const searchSongs = async (query) => {
 
     return response.data.tracks.items;
   } catch (error) {
-    console.error('Error searching for songs:', error);
+    const { translate } = useContext(LanguageContext); // Acceder al contexto
+    console.error(translate('errorSearchingSongs'), error); // Usar la traducción
     throw error;
   }
 };
@@ -124,7 +152,8 @@ export const getAlbumTracks = async (albumId) => {
 
     return response.data.items;
   } catch (error) {
-    console.error('Error fetching album tracks:', error);
+    const { translate } = useContext(LanguageContext); // Acceder al contexto
+    console.error(translate('errorFetchingAlbumTracks'), error); // Usar la traducción
     return [];
   }
 };
@@ -139,7 +168,8 @@ export const saveTrack = async (trackId, token) => {
     });
     return response.data;
   } catch (error) {
-    console.error('Error saving song:', error);
+    const { translate } = useContext(LanguageContext); // Acceder al contexto
+    console.error(translate('errorSavingSong'), error); // Usar la traducción
     throw error;
   }
 };
@@ -154,7 +184,8 @@ export const removeTrack = async (trackId, token) => {
     });
     return response.data;
   } catch (error) {
-    console.error('Error removing song:', error);
+    const { translate } = useContext(LanguageContext); // Acceder al contexto
+    console.error(translate('errorRemovingSong'), error); // Usar la traducción
     throw error;
   }
 };
@@ -169,7 +200,8 @@ export const followArtist = async (artistId, token) => {
     });
     return response.data;
   } catch (error) {
-    console.error('Error following artist:', error);
+    const { translate } = useContext(LanguageContext); // Acceder al contexto
+    console.error(translate('errorFollowingArtist'), error); // Usar la traducción
     throw error;
   }
 };
@@ -184,7 +216,8 @@ export const unfollowArtist = async (artistId, token) => {
     });
     return response.data;
   } catch (error) {
-    console.error('Error unfollowing artist:', error);
+    const { translate } = useContext(LanguageContext); // Acceder al contexto
+    console.error(translate('errorUnfollowingArtist'), error); // Usar la traducción
     throw error;
   }
 };
